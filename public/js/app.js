@@ -15,7 +15,7 @@
       title: "Desain & Revisi UI Figma",
       category: "UI / Design",
       owner: "Bintang",
-      status: "doing",
+      status: "open",
       figmaLink: FIGMA_URL,
       desc: "• Preview semua layer UI di Figma dan revisi masukan dosen.\n• [Usulan] Layer Daily: isi kotak 7 hari (hari 1-6 +100 cash/senjata, hari 7 hadiah karakter).\n• [Usulan] Layer Cash: buat fitur topup cash.\n• [Usulan] Rapikan Layer Heroes & Layer Gun.\n• [Usulan] Vektor guns di Figma: tentukan warna untuk 5 guns.\n• Acuan: Resolusi 1920x1080 (16:9), Font Inter-Black, Teks UI Bahasa Inggris.",
       submissionLink: "",
@@ -39,7 +39,7 @@
       title: "Aset Karakter Hero (Alek, Erika, Hank)",
       category: "Visual Assets",
       owner: "Royan",
-      status: "doing",
+      status: "open",
       figmaLink: FIGMA_URL,
       desc: "• Hapus noda pada aset karakter pertama (Alek).\n• Tambah aset karakter baru: Erika dan Hank.\n• Tiap hero memiliki 5 state animasi: Idle, Walk, Run, Attack, Hurt, Dead.\n• Format: PNG transparan, style dan proporsi seragam mengikuti Figma.",
       submissionLink: "",
@@ -75,7 +75,7 @@
       title: "Aset Zombie (6 Varian Zombie Lengkap)",
       category: "Visual Assets",
       owner: "Eby",
-      status: "doing",
+      status: "open",
       figmaLink: FIGMA_URL,
       desc: "• Total zombie menjadi 6 varian (tambah 5 zombie baru).\n• Pembagian 6 zombie: 1 zombie pertama (di Figma), 2-3 varian zombie biasa, lalu Fast Runner, Tank, dan Boss untuk misi Hard s/d Nightmare.\n• Style disamakan dengan zombie pertama di Figma.\n• Tiap zombie wajib memiliki state lengkap: Idle, Walk, Run, Attack, Hurt, Dead.\n• Format: PNG transparan resolusi seragam.",
       submissionLink: "",
@@ -396,8 +396,11 @@
                   <i data-lucide="hand" style="width:12px;height:12px"></i> KLAIM
                 </button>
               ` : t.status === 'doing' ? `
-                <button class="taskbtn" data-act="mark-done" data-id="${t.id}">
+                <button class="taskbtn" data-act="mark-done" data-id="${t.id}" title="Tandai selesai">
                   <i data-lucide="check" style="width:12px;height:12px"></i> DONE ✓
+                </button>
+                <button class="taskbtn" data-act="cancel-claim" data-id="${t.id}" title="Batalkan klaim tugas ini (kembali ke Available)" style="background:#fff2f2;color:#b91c1c;border-color:#b91c1c">
+                  <i data-lucide="x-circle" style="width:12px;height:12px"></i> BATAL KLAIM
                 </button>
               ` : `
                 <button class="taskbtn" data-act="reopen" data-id="${t.id}">
@@ -877,12 +880,29 @@
           if (want) openLoginModal(task.owner || '');
           return;
         }
+
+        if (task.owner && task.owner.toLowerCase() !== currentUser.toLowerCase()) {
+          const proceed = confirm(`Perhatian: Tugas #${task.id} ini dialokasikan untuk ${task.owner}.\nApakah kamu (${currentUser}) yakin ingin mengklaim tugas milik ${task.owner}?`);
+          if (!proceed) return;
+        }
+
         await API.claimTask(taskId, currentUser);
-        task.owner = currentUser;
         task.status = 'doing';
         saveLocalBackup();
         render();
-        showToast(`Tugas #${taskId} diambil oleh ${currentUser}! ⚡`);
+        showToast(`Tugas #${taskId} (${task.title}) berhasil diklaim! ⚡`);
+        return;
+      }
+
+      if (act === 'cancel-claim') {
+        const canCancel = confirm(`Batalkan klaim tugas #${taskId} (${task.title})?\nStatus tugas akan dikembalikan menjadi Available.`);
+        if (!canCancel) return;
+
+        await API.updateStatus(taskId, 'open');
+        task.status = 'open';
+        saveLocalBackup();
+        render();
+        showToast(`Klaim tugas #${taskId} dibatalkan (Available kembali).`, '↩');
         return;
       }
 

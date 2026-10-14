@@ -125,11 +125,10 @@ app.post('/api/tasks/:id/claim', (req, res) => {
   const task = tasks.find(t => t.id === id);
   if (!task) return res.status(404).json({ success: false, message: 'Tugas tidak ditemukan.' });
 
-  task.owner = member;
   task.status = 'doing';
   writeTasks(tasks);
 
-  res.json({ success: true, message: `Tugas #${id} berhasil diambil oleh ${member}.`, task });
+  res.json({ success: true, message: `Tugas #${id} (${task.title}) berhasil diklaim oleh ${member}.`, task });
 });
 
 // 4. Update Status (open, doing, done)
