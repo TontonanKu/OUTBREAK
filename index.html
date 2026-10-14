@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RRBY Team — Jobdesk Dashboard & Pengumpulan Hasil (Game Outbreak)</title>
+<!-- Google Fonts: Plus Jakarta Sans & Inter for uniform crisp typography -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800;900&family=Inter:wght@700;800;900&display=swap" rel="stylesheet">
+<!-- Modern Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="stylesheet" href="public/css/style.css">
+</head>
+<body>
+
+<div class="shell">
+  <!-- TOP HEADER -->
+  <header class="top">
+    <div class="brand">
+      <div class="brandmark">R.</div>
+      <div class="brand-text-wrap">
+        <div class="brand-name-row">
+          <span>RRBY</span>
+          <span style="color:#888;font-weight:700">/</span>
+          <span class="title-outbreak">GAME OUTBREAK</span>
+        </div>
+        <div class="brand-sub">2D ZOMBIE SURVIVAL (UNITY 6) — TASK &amp; SUBMISSION PORTAL</div>
+      </div>
+    </div>
+
+    <!-- AUTH BAR -->
+    <div class="auth-bar" id="auth-bar">
+      <div id="auth-logged-out" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span class="auth-label">ANGGOTA (4 ORANG):</span>
+        <div class="member-pills">
+          <button class="member-pill" data-user="Reihan"><span class="dot"></span>Reihan</button>
+          <button class="member-pill" data-user="Bintang"><span class="dot"></span>Bintang</button>
+          <button class="member-pill" data-user="Royan"><span class="dot"></span>Royan</button>
+          <button class="member-pill" data-user="Eby"><span class="dot"></span>Eby</button>
+        </div>
+        <button class="primary" id="btn-open-login" style="padding:6px 12px;font-size:11.5px">
+          <i data-lucide="key-round" style="width:13px;height:13px"></i>
+          <span>LOGIN MEMBER</span>
+        </button>
+      </div>
+
+      <div id="auth-logged-in" class="user-logged-box" style="display:none">
+        <div class="avatar" id="user-avatar">?</div>
+        <div>
+          <div style="font-size:12px;font-weight:900" id="user-display-name">Halo, Member ⚡</div>
+          <div style="font-size:9.5px;color:#555;font-weight:800">Anggota Tim Outbreak</div>
+        </div>
+        <button class="member-pill special" id="btn-my-tasks">
+          <i data-lucide="star" style="width:12px;height:12px"></i>
+          <span>Tugas Saya</span>
+        </button>
+        <button class="logout-btn" id="btn-logout">
+          <i data-lucide="log-out" style="width:12px;height:12px"></i>
+          <span>LOGOUT</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- QUICK INFO & FIGMA LINKS -->
+  <div class="quick-links">
+    <span style="display:flex;align-items:center;gap:6px">
+      <i data-lucide="pin" style="width:14px;height:14px"></i>
+      PUSAT ACUAN PROJEK:
+    </span>
+    <a href="https://www.figma.com/design/3z6xuNL6snILkeac92TvGJ/Untitled?node-id=0-1&t=1fbwPhcLpaRk8gBK-1" target="_blank" rel="noopener noreferrer" class="link-badge figma">
+      <i data-lucide="palette" style="width:14px;height:14px"></i>
+      <span>Buka Figma Desain Outbreak ↗</span>
+    </a>
+    <button class="link-badge" id="btn-open-guidelines">
+      <i data-lucide="clipboard-list" style="width:14px;height:14px"></i>
+      <span>Ketentuan Pengumpulan Dosen</span>
+    </button>
+    <button class="link-badge" id="btn-reset-data" style="margin-left:auto;font-size:10.5px;background:#fff5f5;color:#991b1b">
+      <i data-lucide="rotate-ccw" style="width:12px;height:12px"></i>
+      <span>Reset ke Data Asli Word</span>
+    </button>
+  </div>
+
+  <!-- HERO SECTION (NEO-BRUTALIST) -->
+  <section class="hero">
+    <div>
+      <div class="eyebrow">✳ OUTBREAK 2D ZOMBIE SURVIVAL — REVISI PASCA KONSULTASI DOSEN</div>
+      <h1>GET IT<br><span>DONE.</span></h1>
+      <div class="sub">
+        Setiap tugas sudah dibagi perorangan dengan nama agar tidak salah ambil. Jika sudah selesai, silakan kumpulkan hasil berupa tautan Google Drive / link Figma atau drag langsung file ZIP hasil pekerjaan.
+      </div>
+    </div>
+
+    <div class="hero-right">
+      <div>
+        <div class="eyebrow">TEAM PROGRESS / OVERVIEW</div>
+        <div class="bigstat" id="hero-percent">00%</div>
+      </div>
+      <div>
+        <div style="font-size:10.5px;font-weight:900;letter-spacing:0.6px;margin-bottom:5px">PROGRES PER ANGGOTA:</div>
+        <div class="member-progress-bars" id="member-progress-container">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STAT ROW -->
+  <section class="statrow">
+    <div class="stat">
+      <small>TOTAL JOBDESK REVISI</small>
+      <div class="num" id="total">00</div>
+    </div>
+    <div class="stat">
+      <small>SEDANG DIKERJAKAN</small>
+      <div class="num" id="doing">00</div>
+    </div>
+    <div class="stat">
+      <small>TERKUMPUL / SELESAI ✓</small>
+      <div class="num" id="done">00</div>
+    </div>
+    <div class="stat">
+      <small>DOKUMEN TERKUMPUL</small>
+      <div class="num" id="submitted-count">00</div>
+    </div>
+  </section>
+
+  <!-- MAIN TOOLBAR -->
+  <div class="toolbar">
+    <div>
+      <div class="sectitle">THE TASK &amp; SUBMISSION BOARD ↘</div>
+      <div style="font-size:11.5px;font-weight:800;color:#555">Klik "Kumpulkan Tugas" untuk mengunggah link Drive/Figma atau drag file ZIP.</div>
+    </div>
+    <div class="btn-group">
+      <!-- MAIN SUBMISSION BUTTON -->
+      <button class="primary" id="btn-main-submit">
+        <i data-lucide="upload-cloud" style="width:16px;height:16px"></i>
+        <span>KUMPULKAN HASIL TUGAS / SUBMIT</span>
+      </button>
+      <button class="secondary" id="btn-add-custom-task" title="Tambah jobdesk baru jika ada tambahan dari dosen">
+        <i data-lucide="plus" style="width:14px;height:14px"></i>
+        <span>Tambah Jobdesk</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- FILTER & SEARCH BAR -->
+  <div class="filter-bar">
+    <div class="filters" id="status-filters">
+      <button class="filter active" data-status="all">SEMUA STATUS</button>
+      <button class="filter" data-status="open">TERSEDIA (OPEN)</button>
+      <button class="filter" data-status="doing">SEDANG DIKERJAKAN</button>
+      <button class="filter" data-status="done">DONE / TERKUMPUL ✓</button>
+    </div>
+
+    <div class="filters" id="member-filters">
+      <span style="font-size:10.5px;font-weight:900;color:#555">ANGGOTA:</span>
+      <button class="filter active" data-member="all">SEMUA</button>
+      <button class="filter" data-member="Reihan">Reihan</button>
+      <button class="filter" data-member="Bintang">Bintang</button>
+      <button class="filter" data-member="Royan">Royan</button>
+      <button class="filter" data-member="Eby">Eby</button>
+    </div>
+
+    <div class="search-box">
+      <i data-lucide="search" style="width:14px;height:14px;color:#555"></i>
+      <input type="text" id="search-input" placeholder="Cari jobdesk, aset, figma...">
+    </div>
+  </div>
+
+  <!-- TASK CARDS GRID -->
+  <section class="taskgrid" id="tasks"></section>
+
+  <!-- TEAM PROGRESS SUMMARY -->
+  <section class="progressarea">
+    <div class="progresshead">
+      <div>
+        <div class="eyebrow">✳ TOTAL COMPLETION MILESTONE</div>
+        <div style="font-size:20px;font-weight:900;margin-top:4px" id="progress-heading">MENUJU TUNTAS</div>
+      </div>
+      <div id="progress-label" style="font-size:26px;font-weight:900">0 / 0</div>
+    </div>
+    <div class="track">
+      <div class="fill" id="progress-fill" style="width:0%"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11px;font-weight:900;color:#555">
+      <span>START</span>
+      <span id="progress-hint">Ayo gas selesaikan semua aset &amp; audio game Outbreak!</span>
+      <span>100% READY</span>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="bottom">
+    <span>RRBY STUDIO © 2026 GAME OUTBREAK — 2D ZOMBIE SURVIVAL</span>
+    <span>MEMBERS: REIHAN • BINTANG • ROYAN • EBY</span>
+    <span>UNITY 6 PROJECT ↗</span>
+  </footer>
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL 1: PENGUMPULAN HASIL / SUBMISSION    -->
+<!-- ========================================== -->
+<div class="modalback" id="modal-submit-wrap">
+  <div class="modal">
+    <div class="eyebrow">SUBMISSION PORTAL / PENGUMPULAN</div>
+    <h2>KUMPULKAN<br>HASIL TUGAS.</h2>
+    <div style="font-size:12px;color:#555;margin-bottom:14px">
+      Masukkan tautan Google Drive / Figma, atau langsung drag &amp; drop file ZIP aset kamu.
+    </div>
+
+    <form id="form-submit">
+      <div class="field">
+        <label for="sub-owner">NAMA ANGGOTA PENGUMPUL *</label>
+        <select id="sub-owner" required>
+          <option value="">-- Pilih Nama Kamu --</option>
+          <option value="Reihan">Reihan</option>
+          <option value="Bintang">Bintang</option>
+          <option value="Royan">Royan</option>
+          <option value="Eby">Eby</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="sub-task-select">JOBDESK YANG DIKUMPULKAN *</label>
+        <select id="sub-task-select" required>
+          <option value="">-- Pilih Jobdesk --</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="sub-link">LINK GOOGLE DRIVE / FIGMA / HASIL (OPSIONAL JIKA ADA ZIP)</label>
+        <input type="url" id="sub-link" placeholder="https://drive.google.com/drive/folders/... atau https://figma.com/...">
+        <div style="font-size:10px;color:#666">Pastikan akses share Drive sudah di-setting ke "Anyone with the link".</div>
+      </div>
+
+      <div class="field">
+        <label>ATAU DRAG &amp; DROP FILE ZIP / RAR ASET LANGSUNG:</label>
+        <div class="dropzone" id="dropzone">
+          <div class="dropzone-icon">
+            <i data-lucide="archive" style="width:22px;height:22px"></i>
+          </div>
+          <div class="dropzone-text">Tarik &amp; lepas file ZIP di sini, atau klik untuk browse</div>
+          <div class="dropzone-hint">Format yang didukung: .ZIP, .RAR, .7Z, .PNG, .WAV, .OGG, .unitypackage</div>
+          <input type="file" id="file-input" style="display:none" accept=".zip,.rar,.7z,.tar,.gz,.png,.wav,.ogg,.unitypackage">
+        </div>
+        <div id="file-preview-wrap" style="display:none">
+          <div class="file-preview">
+            <span id="file-name-display">file.zip (0 KB)</span>
+            <button type="button" class="file-remove" id="btn-remove-file">Hapus ✕</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="sub-notes">CATATAN HASIL / REVISI</label>
+        <textarea id="sub-notes" placeholder="Contoh: 6 varian zombie sudah lengkap dengan 6 state animasi format PNG transparan."></textarea>
+      </div>
+
+      <div class="field">
+        <label for="sub-status">STATUS SETELAH DIKUMPULKAN</label>
+        <select id="sub-status">
+          <option value="done" selected>Done ✓ (Selesai &amp; Terkumpul)</option>
+          <option value="doing">In Progress (Masih ada perbaikan, kumpul sementara)</option>
+        </select>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+        <button type="button" class="secondary" id="btn-cancel-submit">BATAL</button>
+        <button type="submit" class="primary">
+          <i data-lucide="send" style="width:14px;height:14px"></i>
+          <span>KUMPULKAN SEKARANG ↗</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL 2: LOGIN MEMBER                      -->
+<!-- ========================================== -->
+<div class="modalback" id="modal-login-wrap">
+  <div class="modal">
+    <div class="eyebrow">WORKSPACE SECURITY</div>
+    <h2>LOGIN MEMBER<br>TIM OUTBREAK.</h2>
+    <div style="font-size:12px;color:#555;margin-bottom:14px">
+      Pilih nama kamu dan masukkan password member untuk claim tugas atau menandai selesai.
+    </div>
+
+    <!-- QUICK MEMBER CARDS -->
+    <div style="font-size:10.5px;font-weight:900;letter-spacing:0.6px;margin-bottom:6px">PILIH NAMA KAMU:</div>
+    <div class="member-select-grid">
+      <div class="member-card-opt" data-name="Reihan">
+        <i data-lucide="laptop" style="width:18px;height:18px"></i>
+        <div><b>Reihan</b><div class="role-sub">Unity &amp; Audio Lead</div></div>
+      </div>
+      <div class="member-card-opt" data-name="Bintang">
+        <i data-lucide="palette" style="width:18px;height:18px"></i>
+        <div><b>Bintang</b><div class="role-sub">UI Design &amp; Audio</div></div>
+      </div>
+      <div class="member-card-opt" data-name="Royan">
+        <i data-lucide="shield" style="width:18px;height:18px"></i>
+        <div><b>Royan</b><div class="role-sub">Character, BG &amp; Voice</div></div>
+      </div>
+      <div class="member-card-opt" data-name="Eby">
+        <i data-lucide="skull" style="width:18px;height:18px"></i>
+        <div><b>Eby</b><div class="role-sub">Zombie Assets Pack</div></div>
+      </div>
+    </div>
+
+    <form id="form-login">
+      <div class="field">
+        <label for="login-name">NAMA TERPILIH *</label>
+        <input type="text" id="login-name" readonly required placeholder="Klik nama di atas">
+      </div>
+
+      <div class="field">
+        <label for="login-password">PASSWORD MEMBER *</label>
+        <div style="position:relative">
+          <input type="password" id="login-password" required placeholder="Masukkan password tim...">
+          <button type="button" id="btn-toggle-pwd" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:none;background:transparent;cursor:pointer">
+            <i data-lucide="eye" style="width:16px;height:16px"></i>
+          </button>
+        </div>
+        <div style="font-size:10.5px;color:#555;margin-top:4px">
+          💡 Password tersimpan aman menggunakan enkripsi SHA-256.
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+        <button type="button" class="secondary" id="btn-cancel-login">BATAL</button>
+        <button type="submit" class="primary">
+          <i data-lucide="log-in" style="width:14px;height:14px"></i>
+          <span>MASUK KE WORKSPACE ↗</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL 3: KETENTUAN PENGUMPULAN DARI DOSEN  -->
+<!-- ========================================== -->
+<div class="modalback" id="modal-guidelines-wrap">
+  <div class="modal" style="width:min(600px,100%)">
+    <div class="eyebrow">DOKUMEN REVISI DOSEN</div>
+    <h2>KETENTUAN<br>PENGUMPULAN.</h2>
+
+    <div style="font-size:12.5px;line-height:1.6;color:#333">
+      <div style="background:#fff;border:2px solid var(--ink);padding:12px;margin-bottom:12px">
+        <b style="color:var(--orange)">🎮 INFO UMUM GAME:</b><br>
+        • Judul: <b>Outbreak (2D Zombie Survival - Unity 6)</b><br>
+        • Acuan Resolusi: <b>1920 x 1080 (16:9)</b><br>
+        • Font: <b>Inter-Black</b> | Teks UI: <b>Bahasa Inggris</b><br>
+        • Desain Utama: 5 Misi berjenjang (Easy - Nightmare), 3 Hero (Alek, Erika, Hank), 5 Senjata (Revolver, SMG, Shotgun, AR, Sniper).
+      </div>
+
+      <div style="background:#fff;border:2px solid var(--ink);padding:12px;margin-bottom:12px">
+        <b>🖼 FORMAT ASSET GAMBAR (Royan, Eby, Bintang):</b><br>
+        • Format wajib <b>PNG transparan</b>.<br>
+        • Ukuran frame dan style seragam dengan aset pertama di Figma.<br>
+        • Penamaan file rapi dan seragam (contoh: <code>zombie_walk_01.png</code>, <code>hero_erika_idle_01.png</code>).
+      </div>
+
+      <div style="background:#fff;border:2px solid var(--ink);padding:12px;margin-bottom:12px">
+        <b>🎵 FORMAT AUDIO &amp; SFX (Bintang, Royan, Reihan):</b><br>
+        • File dikirim sebagai <b>WAV atau OGG</b> bebas lisensi.<br>
+        • Target volume dalam game: <b>SFX 0.95</b> dan <b>BGM 0.75</b>.<br>
+        • Pastikan audio tidak peaking atau clipping (suara pecah).
+      </div>
+
+      <div style="background:#fff;border:2px solid var(--ink);padding:12px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <b>📁 TEMPAT PENGUMPULAN:</b><br>
+          Google Drive Shared Folder Tim / langsung upload ZIP di dashboard ini.
+        </div>
+        <a href="https://www.figma.com/design/3z6xuNL6snILkeac92TvGJ/Untitled?node-id=0-1&t=1fbwPhcLpaRk8gBK-1" target="_blank" class="link-badge figma">
+          Buka Figma ↗
+        </a>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;margin-top:16px">
+      <button type="button" class="primary" id="btn-close-guidelines">MENGERTI ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL 4: TAMBAH / EDIT JOBDESK             -->
+<!-- ========================================== -->
+<div class="modalback" id="modal-task-wrap">
+  <div class="modal">
+    <div class="eyebrow" id="task-modal-eyebrow">TASK EDITOR</div>
+    <h2 id="task-modal-title">EDIT<br>JOBDESK.</h2>
+    <form id="form-task">
+      <div class="field">
+        <label for="task-title">JUDUL JOBDESK *</label>
+        <input type="text" id="task-title" required placeholder="Contoh: Sprite Animasi Tank Zombie">
+      </div>
+      <div class="field">
+        <label for="task-category">KATEGORI</label>
+        <select id="task-category">
+          <option value="Visual Assets">Visual Assets (Karakter, Zombie, BG)</option>
+          <option value="UI / Design">UI / Design (Figma &amp; Menu)</option>
+          <option value="Audio">Audio (SFX, Voice, Musik)</option>
+          <option value="Unity Development">Unity Development (Integrasi, Script)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="task-owner">PENANGGUNG JAWAB (NAMA ANGGOTA) *</label>
+        <select id="task-owner" required>
+          <option value="Reihan">Reihan</option>
+          <option value="Bintang">Bintang</option>
+          <option value="Royan">Royan</option>
+          <option value="Eby">Eby</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="task-desc">DETAIL &amp; INSTRUKSI</label>
+        <textarea id="task-desc" placeholder="Rincian instruksi pekerjaan..."></textarea>
+      </div>
+      <div class="field">
+        <label for="task-figma">LINK ACUAN FIGMA (OPSIONAL)</label>
+        <input type="url" id="task-figma" placeholder="https://figma.com/design/...">
+      </div>
+      <div class="field">
+        <label for="task-status">STATUS</label>
+        <select id="task-status">
+          <option value="open">Available (Belum Dikerjakan)</option>
+          <option value="doing">In Progress (Sedang Dibuat)</option>
+          <option value="done">Done (Selesai)</option>
+        </select>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+        <button type="button" class="secondary" id="btn-cancel-task">BATAL</button>
+        <button type="submit" class="primary">SIMPAN JOBDESK ↗</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- TOAST NOTIFICATION -->
+<div class="toast" id="toast">
+  <i data-lucide="check" style="width:16px;height:16px"></i>
+  <span id="toast-msg">Notifikasi</span>
+</div>
+
+<!-- App Scripts -->
+<script src="public/js/api.js"></script>
+<script src="public/js/app.js"></script>
+</body>
+</html>
