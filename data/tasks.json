@@ -76,7 +76,7 @@
     "title": "Import & Setup Seluruh Aset di Unity 6",
     "category": "Unity Development",
     "owner": "Reihan",
-    "status": "open",
+    "status": "doing",
     "figmaLink": "https://www.figma.com/design/3z6xuNL6snILkeac92TvGJ/Untitled?node-id=0-1&t=1fbwPhcLpaRk8gBK-1",
     "desc": "• Import semua aset baru (karakter Erika/Hank, 6 varian zombie, background 5 misi, dan icon UI) ke project Unity 6 Game Outbreak.\n• Setup sprite slicing, pivot point, sprite atlas, dan konfigurasi animator controller.",
     "submissionLink": "",

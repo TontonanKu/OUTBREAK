@@ -405,9 +405,15 @@
                 </button>
               `}
 
-              <button class="taskbtn" data-act="edit" data-id="${t.id}">
-                <i data-lucide="edit-2" style="width:12px;height:12px"></i> EDIT
-              </button>
+              ${isReihan() ? `
+                <button class="taskbtn" data-act="edit" data-id="${t.id}" title="Edit Jobdesk (Reihan)">
+                  <i data-lucide="edit-2" style="width:12px;height:12px"></i> EDIT
+                </button>
+              ` : `
+                <button class="taskbtn" data-act="edit" data-id="${t.id}" title="Hanya Reihan yang berwenang mengedit jobdesk" style="color:#666">
+                  <i data-lucide="lock" style="width:12px;height:12px"></i> EDIT
+                </button>
+              `}
             </div>
           </div>
         </article>
@@ -480,10 +486,19 @@
     stagedFile = null;
   }
 
+  function isReihan() {
+    return currentUser && currentUser.toLowerCase() === 'reihan';
+  }
+
   // ----------------------------------------------------
-  // TASK EDITOR MODAL
+  // TASK EDITOR MODAL (Khusus Reihan)
   // ----------------------------------------------------
   function openTaskEditor(task = null) {
+    if (!isReihan()) {
+      alert('Akses Dibatasi: Hanya Reihan (Lead) yang memiliki izin untuk menambah atau mengedit jobdesk!');
+      return;
+    }
+
     editTaskId = task ? task.id : null;
     $('task-modal-eyebrow').textContent = task ? `EDIT TASK / #${String(task.id).padStart(3, '0')}` : 'TAMBAH JOBDESK BARU';
     $('task-modal-title').innerHTML = task ? 'EDIT<br>JOBDESK.' : 'TAMBAH<br>JOBDESK.';
@@ -502,6 +517,72 @@
   function closeTaskEditor() {
     $('modal-task-wrap').classList.remove('show');
     editTaskId = null;
+  }
+
+  // ----------------------------------------------------
+  // SUBMISSIONS ARCHIVE MODAL (Rekap Hasil & Folder Uploads)
+  // ----------------------------------------------------
+  async function openArchiveModal() {
+    const data = await API.getSubmissions();
+    const container = $('archive-content-container');
+    const submissions = data && data.submissions ? data.submissions : [];
+
+    if (!submissions.length) {
+      container.innerHTML = `
+        <div style="text-align:center;padding:30px;color:#666">
+          <i data-lucide="archive" style="width:36px;height:36px;margin:auto;display:block;margin-bottom:8px"></i>
+          <div style="font-weight:900;font-size:13px">Belum ada hasil yang dikumpulkan oleh tim.</div>
+          <div style="font-size:11px;margin-top:4px">Klik tombol "KUMPULKAN HASIL TUGAS / SUBMIT" untuk mengunggah link atau file ZIP.</div>
+        </div>
+      `;
+    } else {
+      container.innerHTML = submissions.map(s => {
+        const hasLink = Boolean(s.submissionLink);
+        const hasFile = Boolean(s.fileMeta);
+        const dlUrl = s.fileMeta ? (s.fileMeta.downloadUrl || `/api/download/${s.fileMeta.storedName}`) : '';
+        return `
+          <div style="border:2px solid var(--ink);padding:12px;margin-bottom:10px;background:#faf9f5">
+            <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #ddd;padding-bottom:6px;margin-bottom:8px">
+              <div>
+                <span style="background:var(--yellow);border:1px solid #111;padding:2px 8px;font-size:11px;font-weight:900">👤 ${safeHTML(s.owner)}</span>
+                <b style="margin-left:8px;font-size:13px">#${s.id} - ${safeHTML(s.title)}</b>
+              </div>
+              <span style="font-size:10px;font-weight:900;color:#065f46;background:#b8f5a5;border:1px solid #065f46;padding:2px 6px">TERKUMPUL ✓</span>
+            </div>
+
+            ${hasLink ? `
+              <div style="margin-bottom:6px">
+                <span style="font-size:11px;font-weight:900">🔗 Tautan Hasil:</span>
+                <a href="${safeHTML(validURL(s.submissionLink))}" target="_blank" rel="noopener noreferrer" style="color:#047857;font-weight:900;text-decoration:underline;margin-left:4px">
+                  ${safeHTML(s.submissionLink)} ↗
+                </a>
+              </div>
+            ` : ''}
+
+            ${hasFile ? `
+              <div style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid #111;padding:6px 10px;margin-bottom:6px">
+                <span style="font-size:11px;font-weight:800;display:flex;align-items:center;gap:6px">
+                  <i data-lucide="archive" style="width:14px;height:14px"></i>
+                  📦 ${safeHTML(s.fileMeta.name)} (${safeHTML(s.fileMeta.size)})
+                </span>
+                <a href="${dlUrl}" download="${safeHTML(s.fileMeta.name)}" class="download-btn" style="padding:4px 10px;font-size:11px">
+                  <i data-lucide="download" style="width:12px;height:12px"></i> Unduh File ZIP
+                </a>
+              </div>
+            ` : ''}
+
+            ${s.notes ? `
+              <div style="font-size:11px;color:#444;font-style:italic;margin-top:4px">
+                Catatan: "${safeHTML(s.notes)}"
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    $('modal-archive-wrap').classList.add('show');
+    refreshIcons();
   }
 
   // ----------------------------------------------------
@@ -687,7 +768,7 @@
       }
 
       const taskData = { title, category, owner, desc, figmaLink, status };
-      const res = await API.saveTask(taskData, editTaskId);
+      const res = await API.saveTask(taskData, editTaskId, currentUser);
 
       if (res && res.success) {
         if (editTaskId) {
@@ -699,6 +780,9 @@
           tasks.push(newT);
           showToast(`Jobdesk baru berhasil ditambahkan!`);
         }
+      } else {
+        alert((res && res.message) || 'Akses ditolak: Hanya Reihan yang berwenang!');
+        return;
       }
 
       saveLocalBackup();
@@ -712,6 +796,10 @@
       refreshIcons();
     });
     $('btn-close-guidelines').addEventListener('click', () => $('modal-guidelines-wrap').classList.remove('show'));
+
+    // Archive Modal (Rekap Hasil & Folder Uploads)
+    $('btn-open-archive').addEventListener('click', openArchiveModal);
+    $('btn-close-archive').addEventListener('click', () => $('modal-archive-wrap').classList.remove('show'));
 
     // Reset Data
     $('btn-reset-data').addEventListener('click', async () => {
@@ -730,7 +818,7 @@
     });
 
     // Dismiss on background click
-    ['modal-submit-wrap', 'modal-login-wrap', 'modal-guidelines-wrap', 'modal-task-wrap'].forEach(id => {
+    ['modal-submit-wrap', 'modal-login-wrap', 'modal-guidelines-wrap', 'modal-task-wrap', 'modal-archive-wrap'].forEach(id => {
       $(id).addEventListener('click', (e) => {
         if (e.target === $(id)) $(id).classList.remove('show');
       });
@@ -775,6 +863,10 @@
       }
 
       if (act === 'edit') {
+        if (!isReihan()) {
+          alert('Akses Dibatasi: Hanya Reihan (Lead) yang memiliki izin untuk mengedit rincian jobdesk!');
+          return;
+        }
         openTaskEditor(task);
         return;
       }

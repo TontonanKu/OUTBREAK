@@ -107,14 +107,17 @@ const API = {
     return { success: true };
   },
 
-  async saveTask(taskData, editId = null) {
+  async saveTask(taskData, editId = null, currentUser = '') {
     if (this.isServerAvailable) {
       try {
         const url = editId ? `/api/tasks/${editId}` : '/api/tasks';
         const method = editId ? 'PUT' : 'POST';
         const res = await fetch(url, {
           method,
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user': currentUser || ''
+          },
           body: JSON.stringify(taskData)
         });
         return await res.json();
@@ -123,6 +126,24 @@ const API = {
       }
     }
     return { success: true };
+  },
+
+  async getSubmissions() {
+    if (this.isServerAvailable) {
+      try {
+        const res = await fetch('/api/submissions');
+        return await res.json();
+      } catch (e) {
+        console.warn('Server error getting submissions', e);
+      }
+    }
+    const local = localStorage.getItem('rrby_outbreak_tasks_v2');
+    const tasks = local ? JSON.parse(local) : [];
+    return {
+      success: true,
+      submissions: tasks.filter(t => t.submissionLink || t.fileMeta),
+      uploadsDir: 'uploads/'
+    };
   },
 
   async resetTasks() {

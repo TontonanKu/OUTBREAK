@@ -181,8 +181,16 @@ app.post('/api/tasks/:id/submit', upload.single('file'), (req, res) => {
   res.json({ success: true, message: `Hasil tugas #${id} (${task.title}) berhasil dikumpulkan!`, task });
 });
 
-// 6. Create Task
+// 6. Create Task (Hanya Reihan yang berwenang)
 app.post('/api/tasks', (req, res) => {
+  const requester = req.headers['x-user'] || req.body.requester;
+  if (!requester || requester.toLowerCase() !== 'reihan') {
+    return res.status(403).json({
+      success: false,
+      message: 'Akses ditolak: Hanya Reihan (Lead) yang berwenang membuat jobdesk baru!'
+    });
+  }
+
   const { title, category, owner, desc, figmaLink, status } = req.body;
   if (!title) return res.status(400).json({ success: false, message: 'Judul tugas wajib diisi.' });
 
@@ -203,11 +211,19 @@ app.post('/api/tasks', (req, res) => {
 
   tasks.push(newTask);
   writeTasks(tasks);
-  res.json({ success: true, message: `Jobdesk baru #${newId} berhasil dibuat.`, task: newTask });
+  res.json({ success: true, message: `Jobdesk baru #${newId} berhasil dibuat oleh Reihan.`, task: newTask });
 });
 
-// 7. Update Task
+// 7. Update Task (Hanya Reihan yang berwenang)
 app.put('/api/tasks/:id', (req, res) => {
+  const requester = req.headers['x-user'] || req.body.requester;
+  if (!requester || requester.toLowerCase() !== 'reihan') {
+    return res.status(403).json({
+      success: false,
+      message: 'Akses ditolak: Hanya Reihan (Lead) yang berwenang mengedit jobdesk!'
+    });
+  }
+
   const id = Number(req.params.id);
   const { title, category, owner, desc, figmaLink, status } = req.body;
 
@@ -223,7 +239,19 @@ app.put('/api/tasks/:id', (req, res) => {
   if (status) task.status = status;
 
   writeTasks(tasks);
-  res.json({ success: true, message: `Jobdesk #${id} berhasil diupdate.`, task });
+  res.json({ success: true, message: `Jobdesk #${id} berhasil diupdate oleh Reihan.`, task });
+});
+
+// 7b. Get All Submissions (Rekap Pengumpulan & Info Folder)
+app.get('/api/submissions', (req, res) => {
+  const tasks = readTasks();
+  const submissions = tasks.filter(t => t.submissionLink || t.fileMeta);
+  res.json({
+    success: true,
+    count: submissions.length,
+    uploadsDir: UPLOADS_DIR,
+    submissions
+  });
 });
 
 // 8. Reset to Word original data
