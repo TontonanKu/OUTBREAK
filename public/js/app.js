@@ -120,8 +120,16 @@
     }
   ];
 
-  // State
-  let tasks = [];
+  // State - Preloaded with DEFAULT_TASKS so UI renders immediately in 0ms!
+  let tasks = JSON.parse(JSON.stringify(DEFAULT_TASKS));
+  try {
+    const local = localStorage.getItem('rrby_outbreak_tasks_v2');
+    if (local) {
+      const parsed = JSON.parse(local);
+      if (Array.isArray(parsed) && parsed.length) tasks = parsed;
+    }
+  } catch (e) {}
+
   let currentUser = localStorage.getItem('rrby_outbreak_current_user') || null;
   let activeStatusFilter = 'all';
   let activeMemberFilter = 'all';
@@ -171,29 +179,27 @@
   // INITIALIZATION & DATA FETCHING
   // ----------------------------------------------------
   async function init() {
-    await API.checkServer();
-    await loadTasks();
     setupEventListeners();
     updateAuthUI();
-    updateSyncUI();
-    render();
+    render(); // Immediate synchronous render! All 9 tasks display right away without waiting!
+
+    // Connect to Firebase in the background
+    await syncWithCloud();
     startLiveSync();
   }
 
-  async function loadTasks() {
-    const loaded = await API.getTasks();
-    if (loaded && loaded.length) {
-      tasks = loaded;
+  async function syncWithCloud() {
+    updateSyncUI('loading');
+    const cloudTasks = await API.getTasks();
+    if (cloudTasks && cloudTasks.length) {
+      tasks = cloudTasks;
       saveLocalBackup();
+      render();
     } else {
-      const local = localStorage.getItem('rrby_outbreak_tasks_v2');
-      if (local) {
-        tasks = JSON.parse(local);
-      } else {
-        tasks = JSON.parse(JSON.stringify(DEFAULT_TASKS));
-        saveLocalBackup();
-      }
+      // If cloud is somehow empty, seed DEFAULT_TASKS
+      await API.saveAllTasks(DEFAULT_TASKS);
     }
+    updateSyncUI();
   }
 
   function saveLocalBackup() {
@@ -203,11 +209,18 @@
   // ----------------------------------------------------
   // SERVER SYNC & REALTIME COLLABORATION (FIREBASE CLOUD)
   // ----------------------------------------------------
-  function updateSyncUI() {
+  function updateSyncUI(status) {
     const btn = $('btn-sync-status');
     const dot = $('sync-dot');
     const text = $('sync-status-text');
     if (!btn || !text) return;
+
+    if (status === 'loading') {
+      btn.className = 'sync-status-badge offline';
+      text.textContent = 'Sinkron: Memeriksa Cloud...';
+      if (dot) dot.style.background = '#eab308';
+      return;
+    }
 
     if (API.isCloudConnected || API.isServerAvailable) {
       btn.className = 'sync-status-badge online';
@@ -215,7 +228,7 @@
       if (dot) dot.style.background = '#22c55e';
     } else {
       btn.className = 'sync-status-badge offline';
-      text.textContent = 'Menghubungkan Cloud...';
+      text.textContent = 'Lokal (Mode Offline)';
       if (dot) dot.style.background = '#eab308';
     }
   }

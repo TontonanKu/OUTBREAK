@@ -35,10 +35,14 @@ const API = {
       const res = await fetch(`${FIREBASE_DB_URL}/tasks.json?t=${Date.now()}`);
       if (res.ok) {
         const data = await res.json();
-        if (data && Array.isArray(data) && data.length) {
-          this.isCloudConnected = true;
-          this.isServerAvailable = true;
-          return data;
+        if (data) {
+          let list = Array.isArray(data) ? data : Object.values(data);
+          list = list.filter(item => item && typeof item === 'object' && item.title);
+          if (list.length) {
+            this.isCloudConnected = true;
+            this.isServerAvailable = true;
+            return list;
+          }
         }
       }
     } catch (e) {
@@ -46,7 +50,13 @@ const API = {
     }
 
     const local = localStorage.getItem('rrby_outbreak_tasks_v2');
-    return local ? JSON.parse(local) : null;
+    if (local) {
+      try {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed) && parsed.length) return parsed;
+      } catch (e) {}
+    }
+    return null;
   },
 
   async saveAllTasks(tasks) {
