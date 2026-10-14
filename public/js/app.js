@@ -936,24 +936,34 @@
       });
     }
 
-    // Reset Data (Khusus Reihan)
-    $('btn-reset-data').addEventListener('click', async () => {
-      if (!isReihan()) {
-        alert('Akses Dibatasi: Hanya Reihan (Project Lead) yang memiliki izin untuk mereset seluruh data tugas!');
-        return;
-      }
-      if (confirm('PERINGATAN: Apakah kamu yakin ingin mereset seluruh data kembali ke daftar revisi awal Word dosen?\nSeluruh progres, status klaim, dan hasil terkumpul akan dikembalikan ke kondisi awal.')) {
-        const res = await API.resetTasks(currentUser, DEFAULT_TASKS);
-        if (res && res.success) {
-          tasks = (res.tasks && res.tasks.length) ? res.tasks : JSON.parse(JSON.stringify(DEFAULT_TASKS));
-          saveLocalBackup();
-          render();
-          showToast('Data berhasil direset ke revisi awal Word oleh Reihan.', '🔄');
-        } else {
-          alert((res && res.message) || 'Gagal mereset data.');
+    // Reset Data (Optional/Dev command)
+    if ($('btn-reset-data')) {
+      $('btn-reset-data').addEventListener('click', async () => {
+        if (!isReihan()) {
+          alert('Akses Dibatasi: Hanya Reihan (Project Lead) yang memiliki izin untuk mereset seluruh data tugas!');
+          return;
         }
+        if (confirm('PERINGATAN: Apakah kamu yakin ingin mereset seluruh data kembali ke daftar revisi awal Word dosen?\nSeluruh progres, status klaim, dan hasil terkumpul akan dikembalikan ke kondisi awal.')) {
+          const res = await API.resetTasks(currentUser, DEFAULT_TASKS);
+          if (res && res.success) {
+            tasks = (res.tasks && res.tasks.length) ? res.tasks : JSON.parse(JSON.stringify(DEFAULT_TASKS));
+            saveLocalBackup();
+            render();
+            showToast('Data berhasil direset ke revisi awal Word oleh Reihan.', '🔄');
+          } else {
+            alert((res && res.message) || 'Gagal mereset data.');
+          }
+        }
+      });
+    }
+
+    // Console helper for Lead if ever needed
+    window.resetProjectTasks = async () => {
+      if (confirm('Reset seluruh tugas ke default?')) {
+        await API.resetTasks('Reihan', DEFAULT_TASKS);
+        location.reload();
       }
-    });
+    };
 
     // Dismiss on background click
     ['modal-submit-wrap', 'modal-login-wrap', 'modal-guidelines-wrap', 'modal-task-wrap', 'modal-archive-wrap', 'modal-sync-wrap'].forEach(id => {

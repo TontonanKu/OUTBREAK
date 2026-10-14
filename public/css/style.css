@@ -250,6 +250,15 @@ button {
   background: #333;
 }
 
+.link-badge.mindmap {
+  background: #2563eb;
+  color: #fff;
+}
+
+.link-badge.mindmap:hover {
+  background: #1d4ed8;
+}
+
 /* ====================================================
    3. HERO SECTION (Neo-Brutalist "GET IT DONE")
    ==================================================== */
