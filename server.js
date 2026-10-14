@@ -253,13 +253,21 @@ app.get('/api/submissions', (req, res) => {
   });
 });
 
-// 8. Reset to Word original data
+// 8. Reset to Word original data (Khusus Reihan)
 app.post('/api/tasks/reset', (req, res) => {
+  const requester = req.headers['x-user'] || req.body.requester;
+  if (!requester || requester.toLowerCase() !== 'reihan') {
+    return res.status(403).json({
+      success: false,
+      message: 'Akses ditolak: Hanya Reihan (Lead) yang memiliki izin untuk mereset data!'
+    });
+  }
+
   if (fs.existsSync(INITIAL_DATA_FILE)) {
     fs.copyFileSync(INITIAL_DATA_FILE, TASKS_FILE);
   }
   const tasks = readTasks();
-  res.json({ success: true, message: 'Data berhasil direset ke revisi awal Word.', tasks });
+  res.json({ success: true, message: 'Data berhasil direset ke revisi awal Word oleh Reihan.', tasks });
 });
 
 // 9. Download endpoint

@@ -146,10 +146,16 @@ const API = {
     };
   },
 
-  async resetTasks() {
+  async resetTasks(currentUser = '') {
     if (this.isServerAvailable) {
       try {
-        const res = await fetch('/api/tasks/reset', { method: 'POST' });
+        const res = await fetch('/api/tasks/reset', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user': currentUser || ''
+          }
+        });
         return await res.json();
       } catch (e) {
         console.warn('Server error during reset', e);

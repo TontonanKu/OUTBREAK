@@ -804,19 +804,27 @@
     $('btn-open-archive').addEventListener('click', openArchiveModal);
     $('btn-close-archive').addEventListener('click', () => $('modal-archive-wrap').classList.remove('show'));
 
-    // Reset Data
+    // Reset Data (Khusus Reihan)
     $('btn-reset-data').addEventListener('click', async () => {
-      if (confirm('Apakah kamu yakin ingin mereset seluruh data kembali ke daftar revisi awal Word dosen?')) {
-        const res = await API.resetTasks();
-        if (res && res.tasks) {
-          tasks = res.tasks;
+      if (!isReihan()) {
+        alert('Akses Dibatasi: Hanya Reihan (Project Lead) yang memiliki izin untuk mereset seluruh data tugas!');
+        return;
+      }
+      if (confirm('PERINGATAN: Apakah kamu yakin ingin mereset seluruh data kembali ke daftar revisi awal Word dosen?\nSeluruh progres, status klaim, dan hasil terkumpul akan dikembalikan ke kondisi awal.')) {
+        const res = await API.resetTasks(currentUser);
+        if (res && res.success) {
+          if (res.tasks) {
+            tasks = res.tasks;
+          } else {
+            localStorage.removeItem('rrby_outbreak_tasks_v2');
+            await loadTasks();
+          }
+          saveLocalBackup();
+          render();
+          showToast('Data berhasil direset ke revisi awal Word oleh Reihan.', '🔄');
         } else {
-          localStorage.removeItem('rrby_outbreak_tasks_v2');
-          await loadTasks();
+          alert((res && res.message) || 'Gagal mereset data.');
         }
-        saveLocalBackup();
-        render();
-        showToast('Data berhasil direset ke revisi awal Word.');
       }
     });
 
