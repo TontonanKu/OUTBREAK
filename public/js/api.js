@@ -91,6 +91,9 @@ const API = {
     const task = tasks.find(t => t.id === taskId);
     if (task) {
       task.status = status;
+      if (status === 'open') {
+        task.claimedBy = '';
+      }
       await this.saveAllTasks(tasks);
     }
     return { success: true };

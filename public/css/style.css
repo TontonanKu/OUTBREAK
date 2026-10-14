@@ -251,12 +251,14 @@ button {
 }
 
 .link-badge.mindmap {
-  background: #2563eb;
+  background: var(--orange);
   color: #fff;
+  border: 1.5px solid var(--ink);
 }
 
 .link-badge.mindmap:hover {
-  background: #1d4ed8;
+  background: #d83a00;
+  color: #fff;
 }
 
 /* ====================================================
