@@ -1,14 +1,39 @@
 /**
  * API Client for RRBY Outbreak Task Portal
  * Seamlessly talks to Express backend /api, with offline LocalStorage fallback.
+ * Supports configurable Backend URL and multi-device cloud synchronization.
  */
 
 const API = {
-  isServerAvailable: true,
+  isServerAvailable: false,
+  baseUrl: localStorage.getItem('rrby_backend_url') || '',
+
+  getBaseUrl() {
+    if (this.baseUrl) return this.baseUrl.replace(/\/$/, '');
+    // If running on localhost or local IP, use relative path
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.')) {
+      return '';
+    }
+    return '';
+  },
+
+  setBaseUrl(url) {
+    this.baseUrl = (url || '').trim().replace(/\/$/, '');
+    if (this.baseUrl) {
+      localStorage.setItem('rrby_backend_url', this.baseUrl);
+    } else {
+      localStorage.removeItem('rrby_backend_url');
+    }
+  },
 
   async checkServer() {
+    const url = `${this.getBaseUrl()}/api/tasks`;
     try {
-      const res = await fetch('/api/tasks', { method: 'GET', cache: 'no-store' });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
+      const res = await fetch(url, { method: 'GET', cache: 'no-store', signal: controller.signal });
+      clearTimeout(timeoutId);
       this.isServerAvailable = res.ok;
       return this.isServerAvailable;
     } catch (e) {
@@ -20,7 +45,7 @@ const API = {
   async getTasks() {
     if (this.isServerAvailable) {
       try {
-        const res = await fetch('/api/tasks');
+        const res = await fetch(`${this.getBaseUrl()}/api/tasks`, { cache: 'no-store' });
         const data = await res.json();
         return data.tasks || [];
       } catch (e) {
@@ -34,7 +59,7 @@ const API = {
   async login(name, password) {
     if (this.isServerAvailable) {
       try {
-        const res = await fetch('/api/auth/login', {
+        const res = await fetch(`${this.getBaseUrl()}/api/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, password })
@@ -63,7 +88,7 @@ const API = {
   async claimTask(taskId, memberName) {
     if (this.isServerAvailable) {
       try {
-        const res = await fetch(`/api/tasks/${taskId}/claim`, {
+        const res = await fetch(`${this.getBaseUrl()}/api/tasks/${taskId}/claim`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ member: memberName })
@@ -79,7 +104,7 @@ const API = {
   async updateStatus(taskId, status) {
     if (this.isServerAvailable) {
       try {
-        const res = await fetch(`/api/tasks/${taskId}/status`, {
+        const res = await fetch(`${this.getBaseUrl()}/api/tasks/${taskId}/status`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status })
@@ -95,7 +120,7 @@ const API = {
   async submitWork(taskId, formData) {
     if (this.isServerAvailable) {
       try {
-        const res = await fetch(`/api/tasks/${taskId}/submit`, {
+        const res = await fetch(`${this.getBaseUrl()}/api/tasks/${taskId}/submit`, {
           method: 'POST',
           body: formData
         });
@@ -110,7 +135,7 @@ const API = {
   async saveTask(taskData, editId = null, currentUser = '') {
     if (this.isServerAvailable) {
       try {
-        const url = editId ? `/api/tasks/${editId}` : '/api/tasks';
+        const url = editId ? `${this.getBaseUrl()}/api/tasks/${editId}` : `${this.getBaseUrl()}/api/tasks`;
         const method = editId ? 'PUT' : 'POST';
         const res = await fetch(url, {
           method,
@@ -131,7 +156,7 @@ const API = {
   async getSubmissions() {
     if (this.isServerAvailable) {
       try {
-        const res = await fetch('/api/submissions');
+        const res = await fetch(`${this.getBaseUrl()}/api/submissions`, { cache: 'no-store' });
         return await res.json();
       } catch (e) {
         console.warn('Server error getting submissions', e);
@@ -149,7 +174,7 @@ const API = {
   async resetTasks(currentUser = '') {
     if (this.isServerAvailable) {
       try {
-        const res = await fetch('/api/tasks/reset', {
+        const res = await fetch(`${this.getBaseUrl()}/api/tasks/reset`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

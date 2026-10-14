@@ -175,7 +175,9 @@
     await loadTasks();
     setupEventListeners();
     updateAuthUI();
+    updateSyncUI();
     render();
+    startLiveSync();
   }
 
   async function loadTasks() {
@@ -196,6 +198,79 @@
 
   function saveLocalBackup() {
     localStorage.setItem('rrby_outbreak_tasks_v2', JSON.stringify(tasks));
+  }
+
+  // ----------------------------------------------------
+  // SERVER SYNC & REALTIME COLLABORATION
+  // ----------------------------------------------------
+  function updateSyncUI() {
+    const btn = $('btn-sync-status');
+    const dot = $('sync-dot');
+    const text = $('sync-status-text');
+    if (!btn || !text) return;
+
+    if (API.isServerAvailable) {
+      btn.className = 'sync-status-badge online';
+      text.textContent = 'Server: Live Sync (Online)';
+      if (dot) dot.style.background = '#22c55e';
+    } else {
+      btn.className = 'sync-status-badge offline';
+      text.textContent = 'Lokal (Offline/GitHub Pages)';
+      if (dot) dot.style.background = '#eab308';
+    }
+  }
+
+  function openSyncModal() {
+    const isOnline = API.isServerAvailable;
+    const dot = $('sync-modal-dot');
+    const txt = $('sync-modal-status-text');
+    const detail = $('sync-modal-detail');
+    const inputUrl = $('input-backend-url');
+
+    if (dot) dot.style.background = isOnline ? '#22c55e' : '#eab308';
+    if (txt) {
+      txt.textContent = isOnline 
+        ? 'Terhubung ke Backend Server (Realtime Live Sync Aktif) 🟢' 
+        : 'Mode Offline / Penyimpanan Lokal Browser (GitHub Pages) 🟡';
+      txt.style.color = isOnline ? '#15803d' : '#854d0e';
+    }
+    if (detail) {
+      if (isOnline) {
+        detail.innerHTML = `✅ Setiap kali ada anggota tim yang mengklaim tugas atau mengumpulkan hasil tugas, datanya langsung terkirim dan terupdate di semua perangkat anggota tim secara otomatis tanpa perlu refresh.`;
+      } else {
+        detail.innerHTML = `⚠️ Saat ini kamu membuka web versi statis (GitHub Pages). Klaim tugas dan file saat ini hanya tersimpan di memori browsermu. Agar semua anggota tim tersinkronkan di HP/laptop masing-masing, gunakan server lokal (satu Wi-Fi) atau sambungkan ke backend cloud.`;
+      }
+    }
+    if (inputUrl) {
+      inputUrl.value = API.baseUrl || '';
+    }
+
+    $('modal-sync-wrap').classList.add('show');
+    refreshIcons();
+  }
+
+  function closeSyncModal() {
+    $('modal-sync-wrap').classList.remove('show');
+  }
+
+  let syncPollingInterval = null;
+  function startLiveSync() {
+    if (syncPollingInterval) clearInterval(syncPollingInterval);
+    syncPollingInterval = setInterval(async () => {
+      if (API.isServerAvailable) {
+        const remoteTasks = await API.getTasks();
+        if (remoteTasks && remoteTasks.length) {
+          const currentSig = JSON.stringify(tasks.map(t => [t.id, t.status, t.owner, t.submissionLink, t.fileMeta ? t.fileMeta.name : '']));
+          const remoteSig = JSON.stringify(remoteTasks.map(t => [t.id, t.status, t.owner, t.submissionLink, t.fileMeta ? t.fileMeta.name : '']));
+          if (currentSig !== remoteSig) {
+            tasks = remoteTasks;
+            saveLocalBackup();
+            render();
+            console.log('🔄 Data tugas tim berhasil diperbarui secara otomatis dari server.');
+          }
+        }
+      }
+    }, 4000);
   }
 
   // ----------------------------------------------------
@@ -804,6 +879,56 @@
     $('btn-open-archive').addEventListener('click', openArchiveModal);
     $('btn-close-archive').addEventListener('click', () => $('modal-archive-wrap').classList.remove('show'));
 
+    // Sync Modal & Manual Refresh
+    if ($('btn-sync-status')) $('btn-sync-status').addEventListener('click', openSyncModal);
+    if ($('btn-close-sync')) $('btn-close-sync').addEventListener('click', closeSyncModal);
+    if ($('btn-manual-sync')) {
+      $('btn-manual-sync').addEventListener('click', async () => {
+        showToast('Memeriksa server dan menyinkronkan data... 🔄');
+        await API.checkServer();
+        await loadTasks();
+        updateSyncUI();
+        render();
+        if (API.isServerAvailable) {
+          showToast('Data berhasil disinkronkan dengan server! 🟢');
+        } else {
+          showToast('Server tidak terdeteksi. Berjalan dalam mode lokal offline.', '🟡');
+        }
+      });
+    }
+
+    if ($('btn-save-backend-url')) {
+      $('btn-save-backend-url').addEventListener('click', async () => {
+        const url = $('input-backend-url').value.trim();
+        API.setBaseUrl(url);
+        showToast('Mencoba menyambungkan ke backend baru... ⏳');
+        const ok = await API.checkServer();
+        updateSyncUI();
+        if (ok) {
+          await loadTasks();
+          render();
+          showToast('Berhasil terhubung ke server backend! 🟢');
+          closeSyncModal();
+        } else {
+          alert('Tidak dapat terhubung ke URL backend tersebut. Pastikan URL aktif dan mendukung CORS.');
+        }
+      });
+    }
+
+    if ($('btn-test-connection')) {
+      $('btn-test-connection').addEventListener('click', async () => {
+        showToast('Menguji koneksi server... ⏳');
+        const ok = await API.checkServer();
+        updateSyncUI();
+        openSyncModal();
+        if (ok) {
+          showToast('Koneksi server aktif! 🟢');
+        } else {
+          showToast('Server tidak merespons.', '⚠️');
+        }
+      });
+    }
+
     // Reset Data (Khusus Reihan)
     $('btn-reset-data').addEventListener('click', async () => {
       if (!isReihan()) {
@@ -829,10 +954,13 @@
     });
 
     // Dismiss on background click
-    ['modal-submit-wrap', 'modal-login-wrap', 'modal-guidelines-wrap', 'modal-task-wrap', 'modal-archive-wrap'].forEach(id => {
-      $(id).addEventListener('click', (e) => {
-        if (e.target === $(id)) $(id).classList.remove('show');
-      });
+    ['modal-submit-wrap', 'modal-login-wrap', 'modal-guidelines-wrap', 'modal-task-wrap', 'modal-archive-wrap', 'modal-sync-wrap'].forEach(id => {
+      const el = $(id);
+      if (el) {
+        el.addEventListener('click', (e) => {
+          if (e.target === el) el.classList.remove('show');
+        });
+      }
     });
 
     // Filters: Status

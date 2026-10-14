@@ -25,7 +25,13 @@
           <span style="color:#888;font-weight:700">/</span>
           <span class="title-outbreak">GAME OUTBREAK</span>
         </div>
-        <div class="brand-sub">2D ZOMBIE SURVIVAL (UNITY 6) — TASK &amp; SUBMISSION PORTAL</div>
+        <div class="brand-sub" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span>2D ZOMBIE SURVIVAL (UNITY 6) — TASK &amp; SUBMISSION PORTAL</span>
+          <button type="button" class="sync-status-badge online" id="btn-sync-status" title="Klik untuk cek status sinkronisasi server bersama">
+            <span class="sync-dot" id="sync-dot"></span>
+            <span id="sync-status-text">Sinkron: Memeriksa...</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -142,6 +148,10 @@
       <button class="primary" id="btn-main-submit">
         <i data-lucide="upload-cloud" style="width:16px;height:16px"></i>
         <span>KUMPULKAN HASIL TUGAS / SUBMIT</span>
+      </button>
+      <button class="secondary" id="btn-manual-sync" title="Perbarui data terbaru dari server">
+        <i data-lucide="refresh-cw" style="width:14px;height:14px"></i>
+        <span>Sinkronkan Data</span>
       </button>
       <button class="secondary" id="btn-add-custom-task" title="Tambah jobdesk baru jika ada tambahan dari dosen">
         <i data-lucide="plus" style="width:14px;height:14px"></i>
@@ -464,6 +474,51 @@
 
     <div style="display:flex;justify-content:flex-end;margin-top:16px">
       <button type="button" class="primary" id="btn-close-archive">TUTUP REKAP</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL 6: STATUS SINKRONISASI & SERVER URL   -->
+<!-- ========================================== -->
+<div class="modalback" id="modal-sync-wrap">
+  <div class="modal" style="width:min(640px,100%)">
+    <div class="eyebrow">SERVER &amp; REALTIME SYNC SETTINGS</div>
+    <h2>STATUS SINKRONISASI<br>DATA TIM.</h2>
+
+    <div style="background:#fff;border:2px solid var(--ink);padding:14px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:900;margin-bottom:6px">STATUS KONEKSI SAAT INI:</div>
+      <div style="display:flex;align-items:center;gap:8px" id="sync-modal-status-box">
+        <span class="sync-dot" id="sync-modal-dot"></span>
+        <span id="sync-modal-status-text" style="font-size:13px;font-weight:800">Mengecek koneksi...</span>
+      </div>
+      <div id="sync-modal-detail" style="font-size:11.5px;color:#555;margin-top:8px;line-height:1.4"></div>
+    </div>
+
+    <div style="background:var(--paper);border:2px solid var(--ink);padding:14px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:900;margin-bottom:6px">🌐 CARA AGAR SEMUA TEMAN TERSINKRONISASI:</div>
+      <div style="font-size:12px;line-height:1.5;color:#333">
+        <b>1. Jika Satu Jaringan Wi-Fi (Lokal):</b><br>
+        Minta teman membuka alamat IP laptop Reihan: <code style="background:var(--yellow);padding:2px 6px;font-weight:900">http://192.168.100.6:3000</code> di browser HP/laptop mereka.<br><br>
+        <b>2. Jika di Rumah Masing-Masing (Online Cloud):</b><br>
+        Deploy <code>server.js</code> ke cloud gratis (seperti Render.com), lalu masukkan URL backend di bawah ini agar web di GitHub Pages tersambung ke backend yang sama.
+      </div>
+
+      <div style="margin-top:12px">
+        <label for="input-backend-url" style="font-size:11px;font-weight:900;display:block;margin-bottom:4px">CUSTOM BACKEND URL (OPSIONAL):</label>
+        <div style="display:flex;gap:8px">
+          <input type="url" id="input-backend-url" placeholder="https://outbreak-backend.onrender.com" style="flex:1;border:2px solid var(--ink);padding:8px 10px;font-size:12px;font-weight:700">
+          <button type="button" class="primary" id="btn-save-backend-url" style="padding:8px 14px;font-size:11px">SIMPAN</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px">
+      <button type="button" class="secondary" id="btn-test-connection" style="font-size:11.5px">
+        <i data-lucide="refresh-cw" style="width:13px;height:13px"></i>
+        <span>UJI KONEKSI SEKARANG</span>
+      </button>
+      <button type="button" class="primary" id="btn-close-sync">TUTUP</button>
     </div>
   </div>
 </div>
