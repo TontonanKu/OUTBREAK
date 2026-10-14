@@ -55,7 +55,7 @@ button {
   border-bottom: 3px solid var(--ink);
   padding: 0 0 16px;
   gap: 16px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .brand {
@@ -112,11 +112,12 @@ button {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
   background: #fff;
   border: 2px solid var(--ink);
   padding: 6px 12px;
   box-shadow: 3px 3px 0 var(--ink);
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .auth-label {
@@ -1061,6 +1062,8 @@ h1 span {
 
 /* Responsive */
 @media (max-width: 960px) {
+  .top { flex-wrap: wrap; }
+  .auth-bar { margin-left: 0; width: 100%; justify-content: space-between; flex-wrap: wrap; }
   .taskgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .statrow { grid-template-columns: repeat(2, 1fr); }
   .hero { grid-template-columns: 1fr; }

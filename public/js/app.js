@@ -217,18 +217,18 @@
 
     if (status === 'loading') {
       btn.className = 'sync-status-badge offline';
-      text.textContent = 'Sinkron: Memeriksa Cloud...';
+      text.textContent = 'Syncing...';
       if (dot) dot.style.background = '#eab308';
       return;
     }
 
     if (API.isCloudConnected || API.isServerAvailable) {
       btn.className = 'sync-status-badge online';
-      text.textContent = 'Firebase Cloud: Live Sync (Online)';
+      text.textContent = 'Live Sync';
       if (dot) dot.style.background = '#22c55e';
     } else {
       btn.className = 'sync-status-badge offline';
-      text.textContent = 'Lokal (Mode Offline)';
+      text.textContent = 'Offline';
       if (dot) dot.style.background = '#eab308';
     }
   }

@@ -24,20 +24,18 @@
           <span>RRBY</span>
           <span style="color:#888;font-weight:700">/</span>
           <span class="title-outbreak">GAME OUTBREAK</span>
-        </div>
-        <div class="brand-sub" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <span>2D ZOMBIE SURVIVAL (UNITY 6) — TASK &amp; SUBMISSION PORTAL</span>
-          <button type="button" class="sync-status-badge online" id="btn-sync-status" title="Klik untuk cek status sinkronisasi server bersama">
+          <button type="button" class="sync-status-badge online" id="btn-sync-status" title="Klik untuk info sinkronisasi cloud Firebase" style="margin-left:6px">
             <span class="sync-dot" id="sync-dot"></span>
-            <span id="sync-status-text">Sinkron: Memeriksa...</span>
+            <span id="sync-status-text">Live Sync</span>
           </button>
         </div>
+        <div class="brand-sub">2D ZOMBIE SURVIVAL (UNITY 6) — TASK &amp; SUBMISSION PORTAL</div>
       </div>
     </div>
 
     <!-- AUTH BAR -->
     <div class="auth-bar" id="auth-bar">
-      <div id="auth-logged-out" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div id="auth-logged-out" style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap">
         <span class="auth-label">ANGGOTA (4 ORANG):</span>
         <div class="member-pills">
           <button class="member-pill" data-user="Reihan"><span class="dot"></span>Reihan</button>
@@ -45,7 +43,7 @@
           <button class="member-pill" data-user="Royan"><span class="dot"></span>Royan</button>
           <button class="member-pill" data-user="Eby"><span class="dot"></span>Eby</button>
         </div>
-        <button class="primary" id="btn-open-login" style="padding:6px 12px;font-size:11.5px">
+        <button class="primary" id="btn-open-login" style="padding:6px 12px;font-size:11.5px;white-space:nowrap">
           <i data-lucide="key-round" style="width:13px;height:13px"></i>
           <span>LOGIN MEMBER</span>
         </button>
