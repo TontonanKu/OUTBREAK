@@ -201,7 +201,7 @@
   }
 
   // ----------------------------------------------------
-  // SERVER SYNC & REALTIME COLLABORATION
+  // SERVER SYNC & REALTIME COLLABORATION (FIREBASE CLOUD)
   // ----------------------------------------------------
   function updateSyncUI() {
     const btn = $('btn-sync-status');
@@ -209,40 +209,36 @@
     const text = $('sync-status-text');
     if (!btn || !text) return;
 
-    if (API.isServerAvailable) {
+    if (API.isCloudConnected || API.isServerAvailable) {
       btn.className = 'sync-status-badge online';
-      text.textContent = 'Server: Live Sync (Online)';
+      text.textContent = 'Firebase Cloud: Live Sync (Online)';
       if (dot) dot.style.background = '#22c55e';
     } else {
       btn.className = 'sync-status-badge offline';
-      text.textContent = 'Lokal (Offline/GitHub Pages)';
+      text.textContent = 'Menghubungkan Cloud...';
       if (dot) dot.style.background = '#eab308';
     }
   }
 
   function openSyncModal() {
-    const isOnline = API.isServerAvailable;
+    const isOnline = API.isCloudConnected || API.isServerAvailable;
     const dot = $('sync-modal-dot');
     const txt = $('sync-modal-status-text');
     const detail = $('sync-modal-detail');
-    const inputUrl = $('input-backend-url');
 
     if (dot) dot.style.background = isOnline ? '#22c55e' : '#eab308';
     if (txt) {
       txt.textContent = isOnline 
-        ? 'Terhubung ke Backend Server (Realtime Live Sync Aktif) 🟢' 
-        : 'Mode Offline / Penyimpanan Lokal Browser (GitHub Pages) 🟡';
+        ? 'Terhubung ke Google Firebase Cloud (Realtime Live Sync 24 Jam) 🟢' 
+        : 'Mode Offline / Memeriksa Koneksi Cloud 🟡';
       txt.style.color = isOnline ? '#15803d' : '#854d0e';
     }
     if (detail) {
       if (isOnline) {
-        detail.innerHTML = `✅ Setiap kali ada anggota tim yang mengklaim tugas atau mengumpulkan hasil tugas, datanya langsung terkirim dan terupdate di semua perangkat anggota tim secara otomatis tanpa perlu refresh.`;
+        detail.innerHTML = `✅ <b>Koneksi Cloud Aktif!</b> Seluruh 4 anggota tim (Reihan, Bintang, Royan, Eby) kini terhubung ke satu database Google Firebase yang sama.<br><br>Setiap kali ada yang mengklaim tugas atau mengumpulkan link/file, datanya langsung terupdate otomatis di layar semua orang tanpa perlu me-refresh halaman!`;
       } else {
-        detail.innerHTML = `⚠️ Saat ini kamu membuka web versi statis (GitHub Pages). Klaim tugas dan file saat ini hanya tersimpan di memori browsermu. Agar semua anggota tim tersinkronkan di HP/laptop masing-masing, gunakan server lokal (satu Wi-Fi) atau sambungkan ke backend cloud.`;
+        detail.innerHTML = `⚠️ Sedang menyambungkan ke Google Firebase Cloud...`;
       }
-    }
-    if (inputUrl) {
-      inputUrl.value = API.baseUrl || '';
     }
 
     $('modal-sync-wrap').classList.add('show');
@@ -255,9 +251,20 @@
 
   let syncPollingInterval = null;
   function startLiveSync() {
+    // 1. Instant Realtime WebSocket / EventSource Listener via Firebase
+    API.setupRealtimeListener((remoteTasks) => {
+      if (remoteTasks && remoteTasks.length) {
+        tasks = remoteTasks;
+        saveLocalBackup();
+        render();
+        console.log('⚡ Realtime WebSocket update received from Firebase!');
+      }
+    });
+
+    // 2. Fallback periodic polling every 4 seconds
     if (syncPollingInterval) clearInterval(syncPollingInterval);
     syncPollingInterval = setInterval(async () => {
-      if (API.isServerAvailable) {
+      if (API.isServerAvailable || API.isCloudConnected) {
         const remoteTasks = await API.getTasks();
         if (remoteTasks && remoteTasks.length) {
           const currentSig = JSON.stringify(tasks.map(t => [t.id, t.status, t.owner, t.submissionLink, t.fileMeta ? t.fileMeta.name : '']));
@@ -266,7 +273,7 @@
             tasks = remoteTasks;
             saveLocalBackup();
             render();
-            console.log('🔄 Data tugas tim berhasil diperbarui secara otomatis dari server.');
+            console.log('🔄 Data tugas tim diperbarui secara realtime dari Firebase.');
           }
         }
       }
@@ -936,14 +943,9 @@
         return;
       }
       if (confirm('PERINGATAN: Apakah kamu yakin ingin mereset seluruh data kembali ke daftar revisi awal Word dosen?\nSeluruh progres, status klaim, dan hasil terkumpul akan dikembalikan ke kondisi awal.')) {
-        const res = await API.resetTasks(currentUser);
+        const res = await API.resetTasks(currentUser, DEFAULT_TASKS);
         if (res && res.success) {
-          if (res.tasks) {
-            tasks = res.tasks;
-          } else {
-            localStorage.removeItem('rrby_outbreak_tasks_v2');
-            await loadTasks();
-          }
+          tasks = (res.tasks && res.tasks.length) ? res.tasks : JSON.parse(JSON.stringify(DEFAULT_TASKS));
           saveLocalBackup();
           render();
           showToast('Data berhasil direset ke revisi awal Word oleh Reihan.', '🔄');

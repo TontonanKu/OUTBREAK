@@ -1,77 +1,200 @@
 /**
  * API Client for RRBY Outbreak Task Portal
- * Seamlessly talks to Express backend /api, with offline LocalStorage fallback.
- * Supports configurable Backend URL and multi-device cloud synchronization.
+ * Powered by Google Firebase Realtime Database for 100% free, 24/7 cross-device sync.
+ * Works seamlessly on GitHub Pages, Mobile HP, and Local PC without any credit card.
  */
 
+const FIREBASE_DB_URL = 'https://outbreak-7b51f-default-rtdb.asia-southeast1.firebasedatabase.app';
+
 const API = {
-  isServerAvailable: false,
-  baseUrl: localStorage.getItem('rrby_backend_url') || '',
-
-  getBaseUrl() {
-    if (this.baseUrl) return this.baseUrl.replace(/\/$/, '');
-    // If running on localhost or local IP, use relative path
-    const host = window.location.hostname;
-    if (host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.')) {
-      return '';
-    }
-    return '';
-  },
-
-  setBaseUrl(url) {
-    this.baseUrl = (url || '').trim().replace(/\/$/, '');
-    if (this.baseUrl) {
-      localStorage.setItem('rrby_backend_url', this.baseUrl);
-    } else {
-      localStorage.removeItem('rrby_backend_url');
-    }
-  },
+  isServerAvailable: true,
+  isCloudConnected: false,
+  eventSource: null,
 
   async checkServer() {
-    const url = `${this.getBaseUrl()}/api/tasks`;
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 4000);
-      const res = await fetch(url, { method: 'GET', cache: 'no-store', signal: controller.signal });
+      const res = await fetch(`${FIREBASE_DB_URL}/tasks.json?shallow=true`, {
+        cache: 'no-store',
+        signal: controller.signal
+      });
       clearTimeout(timeoutId);
+      this.isCloudConnected = res.ok;
       this.isServerAvailable = res.ok;
-      return this.isServerAvailable;
+      return this.isCloudConnected;
     } catch (e) {
+      this.isCloudConnected = false;
       this.isServerAvailable = false;
       return false;
     }
   },
 
   async getTasks() {
-    if (this.isServerAvailable) {
-      try {
-        const res = await fetch(`${this.getBaseUrl()}/api/tasks`, { cache: 'no-store' });
+    try {
+      const res = await fetch(`${FIREBASE_DB_URL}/tasks.json?t=${Date.now()}`);
+      if (res.ok) {
         const data = await res.json();
-        return data.tasks || [];
-      } catch (e) {
-        console.warn('Server error, falling back to LocalStorage', e);
+        if (data && Array.isArray(data) && data.length) {
+          this.isCloudConnected = true;
+          this.isServerAvailable = true;
+          return data;
+        }
       }
+    } catch (e) {
+      console.warn('Firebase connection issue, checking local storage', e);
     }
+
     const local = localStorage.getItem('rrby_outbreak_tasks_v2');
     return local ? JSON.parse(local) : null;
   },
 
-  async login(name, password) {
-    if (this.isServerAvailable) {
-      try {
-        const res = await fetch(`${this.getBaseUrl()}/api/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, password })
-        });
-        const data = await res.json();
-        return data;
-      } catch (e) {
-        console.warn('Server error during login', e);
+  async saveAllTasks(tasks) {
+    try {
+      const res = await fetch(`${FIREBASE_DB_URL}/tasks.json`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(tasks)
+      });
+      return res.ok;
+    } catch (e) {
+      console.error('Failed to sync to Firebase cloud', e);
+      return false;
+    }
+  },
+
+  async claimTask(taskId, memberName) {
+    let tasks = await this.getTasks();
+    if (!tasks) return { success: false };
+    const task = tasks.find(t => t.id === taskId);
+    if (task) {
+      task.status = 'doing';
+      task.claimedBy = memberName;
+      await this.saveAllTasks(tasks);
+    }
+    return { success: true };
+  },
+
+  async updateStatus(taskId, status) {
+    let tasks = await this.getTasks();
+    if (!tasks) return { success: false };
+    const task = tasks.find(t => t.id === taskId);
+    if (task) {
+      task.status = status;
+      await this.saveAllTasks(tasks);
+    }
+    return { success: true };
+  },
+
+  async submitWork(taskId, formDataOrObj) {
+    let tasks = await this.getTasks();
+    if (!tasks) return { success: false };
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return { success: false };
+
+    let owner = '', link = '', notes = '', status = 'done', fileMeta = null;
+    if (formDataOrObj instanceof FormData) {
+      owner = formDataOrObj.get('owner') || task.owner;
+      link = formDataOrObj.get('link') || '';
+      notes = formDataOrObj.get('notes') || '';
+      status = formDataOrObj.get('status') || 'done';
+      const file = formDataOrObj.get('file');
+      if (file && typeof file === 'object' && file.name) {
+        fileMeta = {
+          name: file.name,
+          size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
+          uploadedAt: new Date().toLocaleString('id-ID')
+        };
       }
+    } else {
+      owner = formDataOrObj.owner || task.owner;
+      link = formDataOrObj.link || '';
+      notes = formDataOrObj.notes || '';
+      status = formDataOrObj.status || 'done';
+      fileMeta = formDataOrObj.fileMeta || null;
     }
 
-    // Client-side fallback using SHA-256
+    task.owner = owner;
+    task.submissionLink = link;
+    task.notes = notes;
+    task.status = status;
+    if (fileMeta) task.fileMeta = fileMeta;
+
+    await this.saveAllTasks(tasks);
+
+    // Save record to cloud submissions archive
+    try {
+      await fetch(`${FIREBASE_DB_URL}/submissions/${taskId}.json`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: taskId,
+          title: task.title,
+          owner: task.owner,
+          submissionLink: task.submissionLink,
+          notes: task.notes,
+          fileMeta: task.fileMeta,
+          submittedAt: new Date().toISOString()
+        })
+      });
+    } catch (e) {}
+
+    return { success: true, task };
+  },
+
+  async saveTask(taskData, editId = null, currentUser = '') {
+    if (!currentUser || currentUser.toLowerCase() !== 'reihan') {
+      return { success: false, message: 'Hanya Reihan (Lead) yang diizinkan mengedit jobdesk!' };
+    }
+    let tasks = await this.getTasks();
+    if (!tasks) return { success: false };
+
+    if (editId) {
+      const idx = tasks.findIndex(t => t.id === editId);
+      if (idx !== -1) tasks[idx] = { ...tasks[idx], ...taskData };
+    } else {
+      const newId = tasks.length ? Math.max(...tasks.map(t => t.id)) + 1 : 1;
+      tasks.push({ id: newId, ...taskData, status: 'open', submissionLink: '', notes: '', fileMeta: null });
+    }
+
+    await this.saveAllTasks(tasks);
+    return { success: true, tasks };
+  },
+
+  async getSubmissions() {
+    try {
+      const res = await fetch(`${FIREBASE_DB_URL}/submissions.json?t=${Date.now()}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data) {
+          const subs = Object.values(data);
+          return { success: true, submissions: subs };
+        }
+      }
+    } catch (e) {}
+
+    const tasks = await this.getTasks();
+    return {
+      success: true,
+      submissions: tasks ? tasks.filter(t => t.submissionLink || t.fileMeta) : []
+    };
+  },
+
+  async resetTasks(currentUser = '', defaultTasks = []) {
+    if (!currentUser || currentUser.toLowerCase() !== 'reihan') {
+      return { success: false, message: 'Akses Ditolak: Hanya Reihan yang memiliki izin mereset data!' };
+    }
+    if (defaultTasks && defaultTasks.length) {
+      await this.saveAllTasks(defaultTasks);
+    }
+    try {
+      await fetch(`${FIREBASE_DB_URL}/submissions.json`, { method: 'DELETE' });
+    } catch (e) {}
+
+    return { success: true, tasks: defaultTasks };
+  },
+
+  async login(name, password) {
     const encoder = new TextEncoder();
     const data = encoder.encode(password);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
@@ -85,107 +208,32 @@ const API = {
     }
   },
 
-  async claimTask(taskId, memberName) {
-    if (this.isServerAvailable) {
-      try {
-        const res = await fetch(`${this.getBaseUrl()}/api/tasks/${taskId}/claim`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ member: memberName })
-        });
-        return await res.json();
-      } catch (e) {
-        console.warn('Server error during claim', e);
-      }
+  setupRealtimeListener(onUpdate) {
+    if (this.eventSource) {
+      try { this.eventSource.close(); } catch (e) {}
     }
-    return { success: true };
-  },
-
-  async updateStatus(taskId, status) {
-    if (this.isServerAvailable) {
-      try {
-        const res = await fetch(`${this.getBaseUrl()}/api/tasks/${taskId}/status`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status })
-        });
-        return await res.json();
-      } catch (e) {
-        console.warn('Server error during status update', e);
-      }
-    }
-    return { success: true };
-  },
-
-  async submitWork(taskId, formData) {
-    if (this.isServerAvailable) {
-      try {
-        const res = await fetch(`${this.getBaseUrl()}/api/tasks/${taskId}/submit`, {
-          method: 'POST',
-          body: formData
-        });
-        return await res.json();
-      } catch (e) {
-        console.warn('Server error during submission', e);
-      }
-    }
-    return { success: true };
-  },
-
-  async saveTask(taskData, editId = null, currentUser = '') {
-    if (this.isServerAvailable) {
-      try {
-        const url = editId ? `${this.getBaseUrl()}/api/tasks/${editId}` : `${this.getBaseUrl()}/api/tasks`;
-        const method = editId ? 'PUT' : 'POST';
-        const res = await fetch(url, {
-          method,
-          headers: {
-            'Content-Type': 'application/json',
-            'x-user': currentUser || ''
-          },
-          body: JSON.stringify(taskData)
-        });
-        return await res.json();
-      } catch (e) {
-        console.warn('Server error saving task', e);
-      }
-    }
-    return { success: true };
-  },
-
-  async getSubmissions() {
-    if (this.isServerAvailable) {
-      try {
-        const res = await fetch(`${this.getBaseUrl()}/api/submissions`, { cache: 'no-store' });
-        return await res.json();
-      } catch (e) {
-        console.warn('Server error getting submissions', e);
-      }
-    }
-    const local = localStorage.getItem('rrby_outbreak_tasks_v2');
-    const tasks = local ? JSON.parse(local) : [];
-    return {
-      success: true,
-      submissions: tasks.filter(t => t.submissionLink || t.fileMeta),
-      uploadsDir: 'uploads/'
-    };
-  },
-
-  async resetTasks(currentUser = '') {
-    if (this.isServerAvailable) {
-      try {
-        const res = await fetch(`${this.getBaseUrl()}/api/tasks/reset`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-user': currentUser || ''
+    try {
+      this.eventSource = new EventSource(`${FIREBASE_DB_URL}/tasks.json`);
+      this.eventSource.addEventListener('put', async (e) => {
+        try {
+          const parsed = JSON.parse(e.data);
+          if (parsed && Array.isArray(parsed.data)) {
+            onUpdate(parsed.data);
+          } else if (parsed && parsed.path === '/' && Array.isArray(parsed.data)) {
+            onUpdate(parsed.data);
+          } else {
+            const latest = await this.getTasks();
+            if (latest && Array.isArray(latest)) onUpdate(latest);
           }
-        });
-        return await res.json();
-      } catch (e) {
-        console.warn('Server error during reset', e);
-      }
+        } catch (err) {
+          console.warn('Realtime parse event error', err);
+        }
+      });
+      this.eventSource.onerror = () => {
+        // Automatically handled by browser reconnect
+      };
+    } catch (e) {
+      console.warn('EventSource SSE connection failed', e);
     }
-    return { success: true };
   }
 };
