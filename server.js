@@ -75,8 +75,11 @@ function formatBytes(bytes) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
-// Security: SHA-256 Hash of password "akujawa12"
-const AUTH_PASSWORD_HASH = "7beeab3efa220b4ba7845d15801d06e26d048d271d2fa5c1978e0eadb0bcf417";
+// Security: SHA-256 Hashes
+// Reihan: akuganteng12
+// Bintang, Royan, Eby: akujawa12
+const HASH_REIHAN = "9ef7d1bdd38d8eb06541cc1586e0e73e45044fc4fc0eb8ca835ab1e8041d84f3";
+const HASH_OTHERS = "7beeab3efa220b4ba7845d15801d06e26d048d271d2fa5c1978e0eadb0bcf417";
 const VALID_MEMBERS = ['Reihan', 'Bintang', 'Royan', 'Eby'];
 
 // ----------------------------------------------------
@@ -103,7 +106,10 @@ app.post('/api/auth/login', (req, res) => {
 
   // Hash input
   const inputHash = crypto.createHash('sha256').update(password).digest('hex');
-  if (inputHash !== AUTH_PASSWORD_HASH) {
+  const isReihanUser = name.toLowerCase() === 'reihan';
+  const expectedHash = isReihanUser ? HASH_REIHAN : HASH_OTHERS;
+
+  if (inputHash !== expectedHash) {
     return res.status(401).json({ success: false, message: 'Password salah!' });
   }
 

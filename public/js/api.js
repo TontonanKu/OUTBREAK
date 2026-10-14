@@ -199,9 +199,17 @@ const API = {
     const data = encoder.encode(password);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-    const EXPECTED_HASH = "7beeab3efa220b4ba7845d15801d06e26d048d271d2fa5c1978e0eadb0bcf417";
 
-    if (hash === EXPECTED_HASH) {
+    // Separate secure hashes:
+    // Reihan (Lead): "akuganteng12"
+    // Bintang, Royan, Eby: "akujawa12"
+    const HASH_REIHAN = "9ef7d1bdd38d8eb06541cc1586e0e73e45044fc4fc0eb8ca835ab1e8041d84f3";
+    const HASH_OTHERS = "7beeab3efa220b4ba7845d15801d06e26d048d271d2fa5c1978e0eadb0bcf417";
+
+    const isReihanUser = name && name.toLowerCase() === 'reihan';
+    const expectedHash = isReihanUser ? HASH_REIHAN : HASH_OTHERS;
+
+    if (hash === expectedHash) {
       return { success: true, user: name, message: `Selamat datang, ${name}!` };
     } else {
       return { success: false, message: 'Password salah!' };
