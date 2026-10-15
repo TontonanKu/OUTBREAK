@@ -21,6 +21,12 @@
   padding: 0;
 }
 
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+}
+
 body {
   margin: 0;
   background: var(--paper);
@@ -120,11 +126,25 @@ button {
   margin-left: auto;
 }
 
+.auth-logged-out {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.auth-logged-out #btn-open-login {
+  padding: 6px 12px;
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
 .auth-label {
   font-size: 10.5px;
   font-weight: 900;
   letter-spacing: 0.8px;
   color: #444;
+  white-space: nowrap;
 }
 
 .member-pills {
@@ -171,7 +191,20 @@ button {
 .user-logged-box {
   display: flex;
   align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+
+.user-profile-info {
+  display: flex;
+  align-items: center;
   gap: 8px;
+}
+
+.user-profile-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .avatar {
@@ -260,6 +293,17 @@ button {
 .link-badge.mindmap:hover {
   background: #d83a00;
   color: #fff;
+}
+
+.link-badge.reset {
+  margin-left: auto;
+  font-size: 10.5px;
+  background: #fff5f5;
+  color: #991b1b;
+}
+
+.link-badge.reset:hover {
+  background: #fee2e2;
 }
 
 /* ====================================================
@@ -1062,23 +1106,167 @@ h1 span {
 
 /* Responsive */
 @media (max-width: 960px) {
-  .top { flex-wrap: wrap; }
-  .auth-bar { margin-left: 0; width: 100%; justify-content: space-between; flex-wrap: wrap; }
+  .top {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .auth-bar {
+    margin-left: 0;
+    width: 100%;
+    box-sizing: border-box;
+    justify-content: space-between;
+  }
   .taskgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .statrow { grid-template-columns: repeat(2, 1fr); }
   .hero { grid-template-columns: 1fr; }
 }
 
+@media (max-width: 768px) {
+  .shell { padding: 16px 12px; }
+
+  /* Brand Header Mobile */
+  .brand {
+    gap: 10px;
+    width: 100%;
+  }
+  .brandmark {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .brand-name-row {
+    font-size: 17px;
+    letter-spacing: -0.5px;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .brand-sub {
+    font-size: 9.5px;
+    letter-spacing: 0.8px;
+    line-height: 1.35;
+  }
+  .sync-status-badge {
+    margin-left: auto;
+    font-size: 10px;
+    padding: 2.5px 7px;
+  }
+
+  /* Auth Bar Mobile: Clean 2-Row Layout */
+  .auth-bar {
+    padding: 8px 10px;
+  }
+
+  .auth-logged-out {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .auth-logged-out .auth-label {
+    order: 1;
+    font-size: 10.5px;
+    font-weight: 900;
+  }
+
+  .auth-logged-out #btn-open-login {
+    order: 2;
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 900;
+  }
+
+  .auth-logged-out .member-pills {
+    order: 3;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    margin-top: 2px;
+  }
+
+  .auth-logged-out .member-pill {
+    padding: 6px 4px;
+    font-size: 11px;
+    font-weight: 800;
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+    white-space: nowrap;
+  }
+
+  .auth-logged-out .member-pill .dot {
+    margin-right: 3px;
+    flex-shrink: 0;
+  }
+
+  /* Logged In State Mobile */
+  .user-logged-box {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .user-profile-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .user-profile-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+  }
+
+  /* Quick links mobile */
+  .quick-links {
+    padding: 10px;
+    gap: 6px;
+    font-size: 11px;
+  }
+
+  .link-badge {
+    padding: 5px 9px;
+    font-size: 11px;
+  }
+
+  .link-badge.reset {
+    margin-left: 0;
+  }
+}
+
 @media (max-width: 600px) {
-  .shell { padding: 14px; }
+  .shell { padding: 12px; }
   .taskgrid { grid-template-columns: 1fr; }
-  .statrow { grid-template-columns: 1fr; }
+  .statrow { grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .member-select-grid { grid-template-columns: 1fr; }
   .member-progress-bars { grid-template-columns: 1fr; }
-  h1 { font-size: 50px; letter-spacing: -2.5px; }
+  h1 { font-size: 44px; letter-spacing: -2px; }
   .hero-right { min-height: auto; }
   .filter-bar { flex-direction: column; align-items: stretch; }
+  .filters { width: 100%; justify-content: flex-start; overflow-x: auto; padding-bottom: 4px; }
   .search-box { width: 100%; }
+}
+
+@media (max-width: 380px) {
+  .brand-name-row {
+    font-size: 15px;
+  }
+  .auth-logged-out .member-pills {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .statrow { grid-template-columns: 1fr; }
 }
 
 /* Sync Status Badge */
