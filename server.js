@@ -216,6 +216,23 @@ app.post('/api/tasks/:id/submit', upload.single('file'), (req, res) => {
   res.json({ success: true, message: `Hasil tugas #${id} (${task.title}) berhasil dikumpulkan!`, task });
 });
 
+// Standalone File Upload (Menyimpan langsung ke folder uploads/)
+app.post('/api/upload', upload.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: 'Tidak ada file yang diunggah.' });
+  }
+  const fileMeta = {
+    originalName: req.file.originalname,
+    name: req.file.originalname,
+    storedName: req.file.filename,
+    size: formatBytes(req.file.size),
+    sizeBytes: req.file.size,
+    downloadUrl: `/uploads/${req.file.filename}`,
+    uploadedAt: new Date().toLocaleString('id-ID')
+  };
+  res.json({ success: true, fileMeta });
+});
+
 // 6. Create Task (Hanya Reihan yang berwenang)
 app.post('/api/tasks', (req, res) => {
   const requester = req.headers['x-user'] || req.body.requester;

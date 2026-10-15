@@ -5,6 +5,37 @@
  */
 
 const FIREBASE_DB_URL = 'https://outbreak-7b51f-default-rtdb.asia-southeast1.firebasedatabase.app';
+const FIREBASE_PROJECT_ID = 'outbreak-7b51f';
+const FIREBASE_STORAGE_BUCKET = 'outbreak-7b51f.firebasestorage.app';
+const FIREBASE_STORAGE_BUCKET_FALLBACK = 'outbreak-7b51f.appspot.com';
+
+function formatBytes(bytes) {
+  if (!bytes || bytes === 0) return '0 B';
+  const k = 1024, dm = 1;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
+let firebaseAppInitialized = false;
+function initFirebaseApp() {
+  if (firebaseAppInitialized) return true;
+  if (typeof firebase === 'undefined') return false;
+  try {
+    if (!firebase.apps || !firebase.apps.length) {
+      firebase.initializeApp({
+        databaseURL: FIREBASE_DB_URL,
+        projectId: FIREBASE_PROJECT_ID,
+        storageBucket: FIREBASE_STORAGE_BUCKET
+      });
+    }
+    firebaseAppInitialized = true;
+    return true;
+  } catch (e) {
+    console.warn('Firebase init error:', e);
+    return false;
+  }
+}
 
 const API = {
   isServerAvailable: true,
@@ -122,7 +153,106 @@ const API = {
     return { success: true };
   },
 
-  async submitWork(taskId, formDataOrObj) {
+  async uploadFile(file, onProgress = null) {
+    // 1. Cek jika berjalan di localhost/local IP server.js
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.port === '3000') {
+      try {
+        const fd = new FormData();
+        fd.append('file', file);
+        const res = await fetch('/api/upload', { method: 'POST', body: fd });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.fileMeta) {
+            return {
+              success: true,
+              downloadUrl: data.fileMeta.downloadUrl,
+              name: file.name,
+              size: formatBytes(file.size),
+              sizeBytes: file.size,
+              uploadedAt: new Date().toLocaleString('id-ID')
+            };
+          }
+        }
+      } catch (err) {
+        console.warn('Local upload endpoint failed, proceeding to cloud storage...', err);
+      }
+    }
+
+    // 2. Unggah ke Google Firebase Cloud Storage
+    if (!initFirebaseApp()) {
+      return {
+        success: false,
+        error: 'Firebase SDK belum terhubung. Pastikan browser terhubung ke internet.'
+      };
+    }
+
+    const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const storagePath = `submissions/${Date.now()}_${cleanName}`;
+
+    const tryUploadToBucket = (bucketName) => {
+      return new Promise((resolve, reject) => {
+        try {
+          const storage = firebase.app().storage(`gs://${bucketName}`);
+          const ref = storage.ref(storagePath);
+          const uploadTask = ref.put(file, {
+            contentType: file.type || 'application/octet-stream',
+            customMetadata: {
+              originalName: file.name,
+              uploadedAt: new Date().toISOString()
+            }
+          });
+
+          uploadTask.on(
+            'state_changed',
+            (snapshot) => {
+              if (snapshot.totalBytes > 0 && typeof onProgress === 'function') {
+                const percent = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+                onProgress({ percent, bytesTransferred: snapshot.bytesTransferred, totalBytes: snapshot.totalBytes });
+              }
+            },
+            (err) => reject(err),
+            async () => {
+              try {
+                const downloadUrl = await uploadTask.snapshot.ref.getDownloadURL();
+                resolve({
+                  success: true,
+                  downloadUrl,
+                  name: file.name,
+                  storedPath: storagePath,
+                  bucket: bucketName,
+                  size: formatBytes(file.size),
+                  sizeBytes: file.size,
+                  uploadedAt: new Date().toLocaleString('id-ID')
+                });
+              } catch (e) {
+                reject(e);
+              }
+            }
+          );
+        } catch (e) {
+          reject(e);
+        }
+      });
+    };
+
+    try {
+      return await tryUploadToBucket(FIREBASE_STORAGE_BUCKET);
+    } catch (err) {
+      console.warn(`Upload ke ${FIREBASE_STORAGE_BUCKET} gagal, mencoba bucket cadangan...`, err);
+      try {
+        return await tryUploadToBucket(FIREBASE_STORAGE_BUCKET_FALLBACK);
+      } catch (err2) {
+        console.error('Semua bucket Firebase Storage gagal:', err2);
+        return {
+          success: false,
+          error: err2.message || 'Gagal mengunggah file ke Firebase Storage.',
+          code: err2.code || err.code || 'storage/error'
+        };
+      }
+    }
+  },
+
+  async submitWork(taskId, formDataOrObj, onProgress = null) {
     const currentUser = localStorage.getItem('rrby_outbreak_current_user');
     const validMembers = ['reihan', 'bintang', 'royan', 'eby'];
     if (!currentUser || !validMembers.includes(currentUser.toLowerCase())) {
@@ -138,6 +268,8 @@ const API = {
     if (!task) return { success: false, message: 'Tugas tidak ditemukan.' };
 
     let owner = '', link = '', notes = '', status = 'done', fileMeta = null;
+    let fileToUpload = null;
+
     if (formDataOrObj instanceof FormData) {
       owner = formDataOrObj.get('owner') || task.owner;
       link = formDataOrObj.get('link') || '';
@@ -145,23 +277,46 @@ const API = {
       status = formDataOrObj.get('status') || 'done';
       const file = formDataOrObj.get('file');
       if (file && typeof file === 'object' && file.name) {
-        fileMeta = {
-          name: file.name,
-          size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
-          uploadedAt: new Date().toLocaleString('id-ID')
-        };
+        fileToUpload = file;
       }
     } else {
       owner = formDataOrObj.owner || task.owner;
       link = formDataOrObj.link || '';
       notes = formDataOrObj.notes || '';
       status = formDataOrObj.status || 'done';
-      fileMeta = formDataOrObj.fileMeta || null;
+      if (formDataOrObj.file && typeof formDataOrObj.file === 'object' && formDataOrObj.file.name) {
+        fileToUpload = formDataOrObj.file;
+      } else {
+        fileMeta = formDataOrObj.fileMeta || null;
+      }
+    }
+
+    // Unggah file jika ada file yang dipilih
+    if (fileToUpload) {
+      const uploadRes = await this.uploadFile(fileToUpload, onProgress);
+      if (uploadRes && uploadRes.success) {
+        fileMeta = {
+          name: uploadRes.name,
+          originalName: uploadRes.name,
+          downloadUrl: uploadRes.downloadUrl,
+          storedPath: uploadRes.storedPath || '',
+          size: uploadRes.size,
+          sizeBytes: uploadRes.sizeBytes,
+          uploadedAt: uploadRes.uploadedAt
+        };
+      } else {
+        return {
+          success: false,
+          storageError: true,
+          error: uploadRes ? uploadRes.error : 'Gagal upload file ke cloud storage',
+          code: uploadRes ? uploadRes.code : 'unknown'
+        };
+      }
     }
 
     task.owner = owner;
-    task.submissionLink = link;
-    task.notes = notes;
+    if (link !== undefined) task.submissionLink = link;
+    if (notes !== undefined) task.notes = notes;
     task.status = status;
     if (fileMeta) task.fileMeta = fileMeta;
 
@@ -176,9 +331,9 @@ const API = {
           id: taskId,
           title: task.title,
           owner: task.owner,
-          submissionLink: task.submissionLink,
-          notes: task.notes,
-          fileMeta: task.fileMeta,
+          submissionLink: task.submissionLink || '',
+          notes: task.notes || '',
+          fileMeta: task.fileMeta || null,
           submittedAt: new Date().toISOString()
         })
       });

@@ -873,8 +873,16 @@
             </div>
           ` : ''}
           ${task.fileMeta ? `
-            <div style="font-size:12px;font-weight:800;color:#166534">
-              Lampiran File: ${safeHTML(task.fileMeta.name)} (${safeHTML(task.fileMeta.size)})
+            <div style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:1.5px solid #16a34a;padding:8px 12px;margin-top:6px;gap:8px;flex-wrap:wrap">
+              <span style="font-size:12px;font-weight:800;color:#166534;display:flex;align-items:center;gap:6px">
+                <i data-lucide="archive" style="width:14px;height:14px"></i>
+                Lampiran File: ${safeHTML(task.fileMeta.name)} (${safeHTML(task.fileMeta.size)})
+              </span>
+              ${task.fileMeta.downloadUrl ? `
+                <a href="${safeHTML(task.fileMeta.downloadUrl)}" target="_blank" download="${safeHTML(task.fileMeta.name)}" class="download-btn" style="padding:4px 10px;font-size:11px">
+                  <i data-lucide="download" style="width:12px;height:12px"></i> Unduh File
+                </a>
+              ` : ''}
             </div>
           ` : ''}
           ${task.notes ? `
@@ -1497,7 +1505,16 @@
                   <i data-lucide="check-check" style="width:12px;height:12px"></i> Hasil Terkumpul (Verifikasi Member):
                 </div>
                 ${t.submissionLink ? `<a href="${safeHTML(validURL(t.submissionLink))}" target="_blank" rel="noopener noreferrer" style="color:var(--orange);font-weight:800;text-decoration:underline">Buka Tautan Drive/Figma ↗</a>` : ''}
-                ${t.fileMeta ? `<div>File ZIP: <b>${safeHTML(t.fileMeta.name)}</b> (${safeHTML(t.fileMeta.size)})</div>` : ''}
+                ${t.fileMeta ? `
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;gap:6px;flex-wrap:wrap">
+                    <span>File Aset: <b>${safeHTML(t.fileMeta.name)}</b> (${safeHTML(t.fileMeta.size)})</span>
+                    ${t.fileMeta.downloadUrl ? `
+                      <a href="${safeHTML(t.fileMeta.downloadUrl)}" target="_blank" download="${safeHTML(t.fileMeta.name)}" class="download-btn" style="padding:2px 8px;font-size:10px">
+                        <i data-lucide="download" style="width:10px;height:10px"></i> Unduh File
+                      </a>
+                    ` : ''}
+                  </div>
+                ` : ''}
               </div>
             ` : ''}
 
@@ -2171,6 +2188,25 @@
       const task = tasks.find(t => t.id === taskId);
       if (!task) return;
 
+      const submitBtn = $('form-submit').querySelector('button[type="submit"]');
+      const progressWrap = $('upload-progress-wrap');
+      const progressBar = $('upload-progress-bar');
+      const progressPercent = $('upload-progress-percent');
+      const progressStatus = $('upload-progress-status');
+
+      if (stagedFile) {
+        if (progressWrap) {
+          progressWrap.style.display = 'block';
+          if (progressBar) progressBar.style.width = '0%';
+          if (progressPercent) progressPercent.textContent = '0%';
+          if (progressStatus) progressStatus.textContent = 'Memulai unggahan ke Cloud Storage...';
+        }
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = `<span>Mengunggah file ke cloud...</span>`;
+        }
+      }
+
       const formData = new FormData();
       formData.append('owner', owner);
       formData.append('link', link);
@@ -2180,27 +2216,66 @@
         formData.append('file', stagedFile);
       }
 
-      const res = await API.submitWork(taskId, formData);
-      if (res && res.success && res.task) {
-        Object.assign(task, res.task);
-      } else {
-        task.owner = owner;
-        task.submissionLink = link;
-        task.notes = notes;
-        task.status = status;
-        if (stagedFile) {
-          task.fileMeta = {
-            name: stagedFile.name,
-            size: formatBytes(stagedFile.size),
-            uploadedAt: new Date().toLocaleString('id-ID')
-          };
+      const onProgress = (p) => {
+        if (progressBar) progressBar.style.width = `${p.percent}%`;
+        if (progressPercent) progressPercent.textContent = `${p.percent}%`;
+        if (progressStatus) progressStatus.textContent = `Mengunggah file ke Cloud Storage (${p.percent}%)...`;
+      };
+
+      const res = await API.submitWork(taskId, formData, onProgress);
+
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<i data-lucide="send" style="width:14px;height:14px"></i><span>KUMPULKAN SEKARANG</span>`;
+        refreshIcons();
+      }
+      if (progressWrap) progressWrap.style.display = 'none';
+
+      if (!res.success) {
+        if (res.storageError) {
+          const proceedWithoutFile = confirm(
+            `⚠️ GAGAL MENGUNGGAH FILE KE CLOUD STORAGE:\n` +
+            `${res.error}\n\n` +
+            `👉 Hal ini terjadi jika Firebase Storage belum diaktifkan di console Firebase.\n` +
+            `Apakah ingin tetap mengumpulkan tugas dengan Link Google Drive / Catatan saja tanpa melampirkan file fisik?`
+          );
+          if (proceedWithoutFile) {
+            const noFileForm = new FormData();
+            noFileForm.append('owner', owner);
+            noFileForm.append('link', link);
+            noFileForm.append('notes', notes);
+            noFileForm.append('status', status);
+            const res2 = await API.submitWork(taskId, noFileForm);
+            if (res2 && res2.success) {
+              if (task && res2.task) Object.assign(task, res2.task);
+              stagedFile = null;
+              $('file-input').value = '';
+              $('file-preview-wrap').style.display = 'none';
+              saveLocalBackup();
+              closeSubmitModal();
+              render();
+              showToast(`Hasil tugas #${taskId} berhasil dikumpulkan! 🚀`);
+              return;
+            }
+          }
+          return;
+        } else {
+          alert(res.message || 'Gagal mengumpulkan hasil tugas.');
+          return;
         }
       }
+
+      if (res && res.success && res.task) {
+        Object.assign(task, res.task);
+      }
+      stagedFile = null;
+      $('file-input').value = '';
+      $('file-preview-wrap').style.display = 'none';
 
       saveLocalBackup();
       closeSubmitModal();
       render();
-      showToast(`Hasil tugas #${taskId} berhasil dikumpulkan! 🚀`);
+      showToast(`Hasil tugas #${taskId} & file aset berhasil dikumpulkan! 🚀`);
     });
 
     // Task Editor
