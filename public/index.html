@@ -81,11 +81,6 @@
       <i data-lucide="pin" style="width:14px;height:14px"></i>
       PUSAT ACUAN PROJEK:
     </span>
-    <button class="link-badge feed" id="btn-open-team-feed" style="background:#fff;border-color:var(--ink)">
-      <i data-lucide="image" style="width:14px;height:14px;color:var(--orange)"></i>
-      <span>📸 Feed Progres Tim</span>
-      <span class="feed-count-badge" id="feed-count-badge">0</span>
-    </button>
     <a href="https://www.figma.com/design/3z6xuNL6snILkeac92TvGJ/Untitled?node-id=0-1&t=1fbwPhcLpaRk8gBK-1" target="_blank" rel="noopener noreferrer" class="link-badge figma">
       <i data-lucide="palette" style="width:14px;height:14px"></i>
       <span>Buka Figma Desain Outbreak ↗</span>
@@ -105,19 +100,6 @@
     <button class="link-badge reset" id="btn-reset-data">
       <i data-lucide="rotate-ccw" style="width:12px;height:12px"></i>
       <span>Reset ke Data Asli Word</span>
-    </button>
-  </div>
-
-  <!-- MAIN VIEW SWITCHER TABS (In-Page Navigation) -->
-  <div class="main-view-switcher" id="main-view-switcher">
-    <button type="button" class="view-switch-btn active" id="btn-view-tasks" data-view="tasks">
-      <i data-lucide="layout-grid" style="width:15px;height:15px"></i>
-      <span>📋 DAFTAR JOBDESK TIM (9)</span>
-    </button>
-    <button type="button" class="view-switch-btn" id="btn-view-profile" data-view="profile">
-      <i data-lucide="user-check" style="width:15px;height:15px"></i>
-      <span>📸 PROFIL ANGGOTA &amp; PROGRES HARIAN</span>
-      <span class="feed-count-badge" id="feed-count-badge">0</span>
     </button>
   </div>
 
@@ -202,12 +184,12 @@
     </div>
 
     <div class="filters" id="member-filters">
-      <span style="font-size:10.5px;font-weight:900;color:#555">ANGGOTA:</span>
-      <button class="filter active" data-member="all">SEMUA</button>
-      <button class="filter" data-member="Reihan">Reihan</button>
-      <button class="filter" data-member="Bintang">Bintang</button>
-      <button class="filter" data-member="Royan">Royan</button>
-      <button class="filter" data-member="Eby">Eby</button>
+      <span style="font-size:10.5px;font-weight:900;color:#555">CEK PROFIL ANGGOTA:</span>
+      <button class="filter active" data-member="all" title="Tampilkan semua jobdesk di board">SEMUA (BOARD)</button>
+      <button class="filter" data-member="Reihan" title="Buka profil &amp; progres harian Reihan">Reihan 👤</button>
+      <button class="filter" data-member="Bintang" title="Buka profil &amp; progres harian Bintang">Bintang 👤</button>
+      <button class="filter" data-member="Royan" title="Buka profil &amp; progres harian Royan">Royan 👤</button>
+      <button class="filter" data-member="Eby" title="Buka profil &amp; progres harian Eby">Eby 👤</button>
     </div>
 
     <div class="search-box">
@@ -240,51 +222,10 @@
   </div>
 
   <!-- ========================================== -->
-  <!-- VIEW 2: PROFIL ANGGOTA & LOG PROGRES       -->
+  <!-- VIEW 2: HALAMAN KHUSUS PROFIL & PROGRES   -->
   <!-- ========================================== -->
   <div id="view-profile-container" style="display:none">
-    <div class="profile-inpage-header">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
-        <div>
-          <div class="eyebrow" style="color:var(--orange)">MEMBER PROFILE &amp; DAILY PROGRESS LOG</div>
-          <h2 style="font-size:28px;font-weight:900;margin:4px 0 0;letter-spacing:-1px">PROFIL &amp; LOG PROGRES HARIAN.</h2>
-          <div style="font-size:12px;color:#555;font-weight:700;margin-top:4px">
-            Pantau status jobdesk yang diklaim dan preview progres screenshot harian tim Outbreak.
-          </div>
-        </div>
-        <button type="button" class="secondary" id="btn-back-to-tasks" style="padding:9px 16px;font-size:12px;font-weight:900">
-          <i data-lucide="arrow-left" style="width:14px;height:14px"></i>
-          <span>Kembali ke Daftar Jobdesk</span>
-        </button>
-      </div>
-
-      <!-- In-Page Member Selector Tabs -->
-      <div class="profile-tabs-bar" id="profile-tabs-bar">
-        <button type="button" class="profile-tab active" data-tab="feed">
-          <i data-lucide="globe" style="width:14px;height:14px"></i>
-          <span>🌐 Semua Feed Tim</span>
-        </button>
-        <button type="button" class="profile-tab" data-tab="Reihan">
-          <i data-lucide="laptop" style="width:13px;height:13px"></i>
-          <span>Reihan</span>
-        </button>
-        <button type="button" class="profile-tab" data-tab="Bintang">
-          <i data-lucide="palette" style="width:13px;height:13px"></i>
-          <span>Bintang</span>
-        </button>
-        <button type="button" class="profile-tab" data-tab="Royan">
-          <i data-lucide="shield" style="width:13px;height:13px"></i>
-          <span>Royan</span>
-        </button>
-        <button type="button" class="profile-tab" data-tab="Eby">
-          <i data-lucide="skull" style="width:13px;height:13px"></i>
-          <span>Eby</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- In-Page Profile Body (Rendered Dynamically by JS) -->
-    <div id="profile-inpage-body"></div>
+    <!-- Rendered dynamically by renderMemberProfile() in app.js -->
   </div>
 
   <!-- FOOTER -->

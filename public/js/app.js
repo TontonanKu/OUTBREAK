@@ -313,7 +313,7 @@
           progressUpdates = remoteUpdates;
           updateFeedBadge();
           if ($('view-profile-container') && $('view-profile-container').style.display !== 'none') {
-            renderProfileContent();
+            renderMemberProfile(activeProfileMember);
           }
           console.log('📸 Realtime progress update received from Firebase!');
         }
@@ -334,6 +334,9 @@
             tasks = remoteTasks;
             saveLocalBackup();
             render();
+            if ($('view-profile-container') && $('view-profile-container').style.display !== 'none') {
+              renderMemberProfile(activeProfileMember);
+            }
             console.log('🔄 Data tugas tim diperbarui secara realtime dari Firebase.');
           }
         }
@@ -345,7 +348,7 @@
             progressUpdates = latestProgs;
             updateFeedBadge();
             if ($('view-profile-container') && $('view-profile-container').style.display !== 'none') {
-              renderProfileContent();
+              renderMemberProfile(activeProfileMember);
             }
           }
         }
@@ -497,10 +500,11 @@
 
           <h3>${safeHTML(t.title)}</h3>
 
-          <div class="owner-tag ${!t.owner ? 'unclaimed' : ''}">
+          <div class="owner-tag ${!t.owner ? 'unclaimed' : 'clickable'}" ${t.owner ? `data-view-profile="${safeHTML(t.owner)}" title="Klik untuk cek profil &amp; preview progres ${safeHTML(t.owner)}"` : ''}>
             <i data-lucide="user" style="width:13px;height:13px"></i>
             <span>${t.owner ? safeHTML(t.owner.toUpperCase()) : 'BELUM DIAMBIL'}</span>
             ${isMine ? ' • (TUGAS KAMU ⭐)' : ''}
+            ${t.owner ? '<span style="font-size:10px;text-decoration:underline;margin-left:4px;opacity:0.85">Lihat Profil ↗</span>' : ''}
           </div>
 
           <div class="desc">${safeHTML(t.desc || 'Tidak ada deskripsi.')}</div>
@@ -791,154 +795,37 @@
     }
   }
 
-  function switchMainView(viewName) {
+  let activeProfileMember = 'Reihan';
+
+  function openProfilePage(memberName) {
+    if (!memberName) memberName = currentUser || 'Reihan';
+    activeProfileMember = memberName;
+    
     const tasksView = $('view-tasks-container');
     const profileView = $('view-profile-container');
-    const btnTasks = $('btn-view-tasks');
-    const btnProfile = $('btn-view-profile');
+    if (tasksView) tasksView.style.display = 'none';
+    if (profileView) profileView.style.display = 'block';
 
-    if (viewName === 'profile') {
-      if (tasksView) tasksView.style.display = 'none';
-      if (profileView) profileView.style.display = 'block';
-      if (btnTasks) btnTasks.classList.remove('active');
-      if (btnProfile) btnProfile.classList.add('active');
-      renderProfileContent();
-    } else {
-      if (tasksView) tasksView.style.display = 'block';
-      if (profileView) profileView.style.display = 'none';
-      if (btnTasks) btnTasks.classList.add('active');
-      if (btnProfile) btnProfile.classList.remove('active');
-      render();
-    }
+    renderMemberProfile(activeProfileMember);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     refreshIcons();
   }
 
-  function openProfileView(tab = 'feed') {
-    currentProfileTab = tab || (currentUser || 'feed');
-    document.querySelectorAll('#profile-tabs-bar .profile-tab').forEach(b => {
-      b.classList.toggle('active', b.dataset.tab === currentProfileTab);
-    });
-    switchMainView('profile');
-    const switcher = $('main-view-switcher');
-    if (switcher) {
-      switcher.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+  function backToTaskBoard() {
+    const tasksView = $('view-tasks-container');
+    const profileView = $('view-profile-container');
+    if (tasksView) tasksView.style.display = 'block';
+    if (profileView) profileView.style.display = 'none';
+    render();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    refreshIcons();
   }
 
-  function renderProfileContent() {
-    const container = $('profile-inpage-body');
+  function renderMemberProfile(memberName) {
+    const container = $('view-profile-container');
     if (!container) return;
 
-    if (currentProfileTab === 'feed') {
-      renderTeamFeed(container);
-    } else {
-      renderMemberProfile(container, currentProfileTab);
-    }
-    refreshIcons();
-  }
-
-  function renderTeamFeed(container) {
-    let html = `
-      <div style="background:var(--yellow);border:2.5px solid var(--ink);padding:14px;box-shadow:3px 3px 0 var(--ink);margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-        <div>
-          <div style="font-size:10.5px;font-weight:900;letter-spacing:1px;color:#444">TIMELINE AKTIVITAS HARIAN</div>
-          <div style="font-size:16px;font-weight:900">🌐 LIVE FEED PROGRES HARIAN TIM OUTBREAK</div>
-          <div style="font-size:11px;color:#333;font-weight:700;margin-top:2px">
-            Pantau screenshot perkembangan aset, desain, audio &amp; kode secara realtime dari 4 anggota tim.
-          </div>
-        </div>
-        ${currentUser ? `
-          <button type="button" class="primary" id="btn-quick-post-progress" style="padding:7px 12px;font-size:11.5px">
-            <i data-lucide="plus-circle" style="width:13px;height:13px"></i>
-            <span>Upload Progres ${safeHTML(currentUser)}</span>
-          </button>
-        ` : `
-          <button type="button" class="secondary" id="btn-feed-to-login" style="padding:7px 12px;font-size:11.5px">
-            <i data-lucide="key-round" style="width:13px;height:13px"></i>
-            <span>Login untuk Posting</span>
-          </button>
-        `}
-      </div>
-    `;
-
-    if (!progressUpdates || progressUpdates.length === 0) {
-      html += `
-        <div class="empty">
-          <i data-lucide="image" style="width:36px;height:36px;color:#888;margin-bottom:8px"></i>
-          <div>Belum ada update progres harian gambar yang diposting.</div>
-          <div style="font-size:11.5px;color:#666;font-weight:700;margin-top:4px">
-            Setiap anggota tim dapat mengupload screenshot progres kerja mereka di tab masing-masing.
-          </div>
-        </div>
-      `;
-    } else {
-      html += `<div class="progress-feed-grid">`;
-      progressUpdates.forEach(p => {
-        const info = MEMBER_INFO[p.author] || { color: '#ff4b0b', role: 'Anggota Tim' };
-        html += `
-          <article class="progress-post-card" data-post-id="${p.id}">
-            <div class="post-header">
-              <div class="post-author-box">
-                <div class="post-author-avatar" style="background:${info.color}">
-                  ${p.author ? p.author.charAt(0).toUpperCase() : '?'}
-                </div>
-                <div>
-                  <div class="post-author-name">${safeHTML(p.author)}</div>
-                  <div class="post-date">${safeHTML(p.dateStr || '')}</div>
-                </div>
-              </div>
-              <span class="post-task-badge" style="margin:0">${safeHTML(p.taskTitle || 'Progres Tugas')}</span>
-            </div>
-
-            ${p.imageData ? `
-              <div class="post-img-wrap" data-lightbox-src="${p.imageData}" data-title="${safeHTML(p.title)}" data-author="${safeHTML(p.author)}" data-date="${safeHTML(p.dateStr || '')}" data-notes="${safeHTML(p.notes || '')}">
-                <img src="${p.imageData}" alt="${safeHTML(p.title)}" loading="lazy">
-                <div class="post-img-overlay">
-                  <i data-lucide="maximize-2" style="width:16px;height:16px"></i>
-                  <span>KLIK PERBESAR</span>
-                </div>
-              </div>
-            ` : ''}
-
-            <div class="post-body">
-              <h4 class="post-title">${safeHTML(p.title)}</h4>
-              ${p.notes ? `<p class="post-notes">${safeHTML(p.notes)}</p>` : ''}
-            </div>
-
-            <div class="post-footer">
-              <span style="font-weight:800;color:#666">⚡ Outbreak 2D</span>
-              ${(currentUser === p.author || isReihan()) ? `
-                <button type="button" class="btn-post-del" data-del-prog="${p.id}">
-                  <i data-lucide="trash-2" style="width:11px;height:11px"></i> Hapus
-                </button>
-              ` : ''}
-            </div>
-          </article>
-        `;
-      });
-      html += `</div>`;
-    }
-
-    container.innerHTML = html;
-
-    const quickPostBtn = $('btn-quick-post-progress');
-    if (quickPostBtn) {
-      quickPostBtn.addEventListener('click', () => {
-        openProfileView(currentUser);
-      });
-    }
-
-    const feedLoginBtn = $('btn-feed-to-login');
-    if (feedLoginBtn) {
-      feedLoginBtn.addEventListener('click', () => {
-        openLoginModal();
-      });
-    }
-
-    bindPostCardEvents(container);
-  }
-
-  function renderMemberProfile(container, memberName) {
+    activeProfileMember = memberName;
     const info = MEMBER_INFO[memberName] || {
       role: 'Anggota Tim Outbreak',
       icon: 'user',
@@ -946,27 +833,64 @@
       tagline: 'Tim Pengembang Game 2D Zombie Survival Outbreak.'
     };
 
+    // Filter tasks for this member
     const memberTasks = tasks.filter(t => 
-      (t.owner && t.owner.toLowerCase() === memberName.toLowerCase()) ||
-      (t.claimedBy && t.claimedBy.toLowerCase() === memberName.toLowerCase())
+      t.owner && t.owner.toLowerCase() === memberName.toLowerCase()
     );
+    const claimedTasks = memberTasks.filter(t => t.status === 'doing');
+    const otherTasks = memberTasks.filter(t => t.status !== 'doing');
 
-    const doingCount = memberTasks.filter(t => t.status === 'doing').length;
-    const doneCount = memberTasks.filter(t => t.status === 'done').length;
-    const memberUpdates = progressUpdates.filter(p => p.author && p.author.toLowerCase() === memberName.toLowerCase());
+    // Filter progress updates for this member (newest first)
+    const memberUpdates = progressUpdates
+      .filter(p => p.author && p.author.toLowerCase() === memberName.toLowerCase())
+      .sort((a, b) => (b.id || 0) - (a.id || 0));
+    const latestUpdate = memberUpdates[0];
 
     const isOwnProfile = currentUser && currentUser.toLowerCase() === memberName.toLowerCase();
-    const canPost = isOwnProfile || isReihan();
+    const canPost = isOwnProfile;
 
     let html = `
-      <!-- Hero Card -->
+      <!-- TOP NAVIGATION BAR -->
+      <div class="profile-top-bar">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <button type="button" class="btn-back" id="btn-back-to-tasks-top">
+            <i data-lucide="arrow-left" style="width:14px;height:14px"></i>
+            <span>Kembali ke Task Board</span>
+          </button>
+          <div style="font-size:12px;font-weight:900;color:#666">
+            PILIH PROFIL ANGGOTA:
+          </div>
+          <div class="profile-tabs-bar" id="profile-tabs-bar">
+            ${['Reihan', 'Bintang', 'Royan', 'Eby'].map(m => `
+              <button type="button" class="profile-tab ${m.toLowerCase() === memberName.toLowerCase() ? 'active' : ''}" data-member-tab="${m}">
+                <i data-lucide="${MEMBER_INFO[m].icon}" style="width:12px;height:12px"></i>
+                <span>${m}</span>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+
+        <div>
+          ${isOwnProfile ? `
+            <span style="background:var(--yellow);border:1.5px solid var(--ink);padding:6px 12px;font-size:11.5px;font-weight:900;box-shadow:2px 2px 0 var(--ink)">
+              ⭐ PROFIL KAMU (${safeHTML(currentUser)})
+            </span>
+          ` : `
+            <span style="background:#fff;border:1.5px solid var(--ink);padding:6px 12px;font-size:11.5px;font-weight:900;box-shadow:2px 2px 0 var(--ink)">
+              👁️ MELIHAT PROFIL: ${safeHTML(memberName.toUpperCase())}
+            </span>
+          `}
+        </div>
+      </div>
+
+      <!-- MEMBER HERO CARD -->
       <div class="profile-hero-card">
         <div class="profile-avatar-lg" style="background:${info.color}">
           ${memberName.charAt(0).toUpperCase()}
         </div>
         <div class="profile-meta-wrap">
           <div class="profile-name-title">
-            <span>${safeHTML(memberName)}</span>
+            <span>${safeHTML(memberName.toUpperCase())}</span>
             <span class="profile-role-pill">
               <i data-lucide="${info.icon}" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:2px"></i>
               ${safeHTML(info.role)}
@@ -980,12 +904,12 @@
               <div class="lbl">Total Jobdesk</div>
             </div>
             <div class="profile-mini-stat" style="background:#fef08a">
-              <div class="val" style="color:#854d0e">${doingCount}</div>
-              <div class="lbl">Dikerjakan</div>
+              <div class="val" style="color:#854d0e">${claimedTasks.length}</div>
+              <div class="lbl">Sedang Di-Claim</div>
             </div>
             <div class="profile-mini-stat" style="background:#b8f5a5">
-              <div class="val" style="color:#065f46">${doneCount}</div>
-              <div class="lbl">Selesai</div>
+              <div class="val" style="color:#065f46">${memberTasks.filter(t => t.status === 'done').length}</div>
+              <div class="lbl">Selesai ✓</div>
             </div>
             <div class="profile-mini-stat" style="background:#fed7aa">
               <div class="val" style="color:#9a3412">${memberUpdates.length}</div>
@@ -995,136 +919,258 @@
         </div>
       </div>
 
-      <!-- Claimed Tasks Section -->
-      <div style="background:#fff;border:2.5px solid var(--ink);box-shadow:3.5px 3.5px 0 var(--ink);padding:14px;margin-bottom:18px">
-        <div style="font-size:11px;font-weight:900;letter-spacing:1px;color:#555">JOBDESK RESMI &amp; KLAIM ANGGOTA</div>
-        <div style="font-size:15px;font-weight:900;margin:2px 0 10px">📋 DAFTAR TUGAS MILIK ${safeHTML(memberName.toUpperCase())} (${memberTasks.length})</div>
+      <!-- 2-COLUMN SECTION: KIRI (JOBDESK DI-CLAIM) | KANAN (PREVIEW HARIAN) -->
+      <div class="profile-cols-grid">
+        
+        <!-- ============================================== -->
+        <!-- KOLOM KIRI: JOBDESK YANG DI-CLAIM SAAT INI     -->
+        <!-- ============================================== -->
+        <div class="profile-col-box">
+          <div class="profile-col-header">
+            <h3 class="profile-col-title">
+              <i data-lucide="check-square" style="width:17px;height:17px;color:var(--orange)"></i>
+              <span>JOBDESK YANG DI-CLAIM SAAT INI</span>
+              <span style="background:var(--yellow);border:1px solid var(--ink);font-size:10.5px;padding:2px 7px;font-weight:900">${claimedTasks.length} Aktif</span>
+            </h3>
+            <div class="profile-col-subtitle">
+              Tugas berstatus <b>In Progress / Sedang Dikerjakan</b> oleh ${safeHTML(memberName)}.
+            </div>
+          </div>
+
+          <!-- Claimed tasks cards list -->
+          <div id="claimed-tasks-list">
     `;
 
-    if (memberTasks.length === 0) {
-      html += `<div style="font-size:12px;color:#666;font-style:italic">Belum ada jobdesk yang tercatat untuk ${safeHTML(memberName)}.</div>`;
-    } else {
-      html += `<div style="display:flex;flex-direction:column;gap:8px">`;
-      memberTasks.forEach(t => {
-        let statusBadge = '';
-        if (t.status === 'open') {
-          statusBadge = '<span style="background:#e5e7eb;border:1px solid #111;font-size:10px;font-weight:900;padding:2px 6px">AVAILABLE</span>';
-        } else if (t.status === 'doing') {
-          statusBadge = '<span style="background:var(--yellow);border:1px solid #111;font-size:10px;font-weight:900;padding:2px 6px;color:#854d0e">⚡ SEDANG DIKERJAKAN</span>';
-        } else {
-          statusBadge = '<span style="background:var(--green-light);border:1px solid #065f46;font-size:10px;font-weight:900;padding:2px 6px;color:#065f46">✓ SELESAI</span>';
-        }
-
-        html += `
-          <div style="background:var(--paper);border:1.5px solid var(--ink);padding:10px 12px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-            <div style="flex:1">
-              <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
-                <span style="font-size:10px;font-weight:900;background:#fff;border:1px solid var(--ink);padding:1px 5px">#${t.id} ${safeHTML(t.category)}</span>
-                ${statusBadge}
-              </div>
-              <div style="font-size:12.5px;font-weight:900">${safeHTML(t.title)}</div>
-              <div style="font-size:11px;color:#555;margin-top:3px;line-height:1.35;white-space:pre-line">${safeHTML(t.desc.split('\n')[0])}</div>
+    if (claimedTasks.length === 0) {
+      html += `
+        <div class="empty" style="padding:24px 16px;font-size:12.5px;margin-bottom:12px">
+          <i data-lucide="inbox" style="width:32px;height:32px;color:#888;margin-bottom:6px"></i>
+          <div>Saat ini tidak ada jobdesk yang sedang di-claim oleh ${safeHTML(memberName)}.</div>
+          ${isOwnProfile ? `
+            <div style="font-size:11px;color:#555;margin-top:6px">
+              Buka Task Board dan klik tombol <b>[KLAIM]</b> pada tugas kamu untuk mulai mengerjakan!
             </div>
-            ${t.submissionLink ? `
-              <a href="${safeHTML(validURL(t.submissionLink))}" target="_blank" rel="noopener noreferrer" style="font-size:11px;font-weight:900;color:#047857;text-decoration:underline;white-space:nowrap;padding:4px 6px;background:#fff;border:1px solid var(--ink)">
-                Tautan Hasil ↗
+            <button type="button" class="secondary" id="btn-claim-more-tasks" style="margin-top:10px;padding:8px 12px;font-size:11.5px">
+              ← Buka Task Board untuk Klaim
+            </button>
+          ` : ''}
+        </div>
+      `;
+    } else {
+      claimedTasks.forEach(t => {
+        const hasSubmission = Boolean(t.submissionLink || t.fileMeta);
+        html += `
+          <div class="claimed-task-card">
+            <div class="claimed-task-top">
+              <span style="font-size:10.5px;font-weight:900;background:#fff;border:1px solid var(--ink);padding:2px 6px">
+                TASK / #${String(t.id).padStart(3, '0')} • ${safeHTML(t.category)}
+              </span>
+              <span class="status doing" style="font-size:10px;padding:2px 7px">
+                <i data-lucide="clock" style="width:10px;height:10px"></i>
+                IN PROGRESS
+              </span>
+            </div>
+
+            <div class="claimed-task-title">${safeHTML(t.title)}</div>
+            <div class="claimed-task-desc">${safeHTML(t.desc)}</div>
+
+            ${t.figmaLink ? `
+              <a href="${safeHTML(validURL(t.figmaLink))}" target="_blank" rel="noopener noreferrer" class="figma-link-btn" style="margin-bottom:10px;display:inline-flex">
+                <i data-lucide="palette" style="width:12px;height:12px"></i>
+                <span>Buka Acuan Figma ↗</span>
               </a>
             ` : ''}
+
+            ${hasSubmission ? `
+              <div style="background:#fff;border:1.5px solid var(--ink);padding:8px 10px;margin-bottom:10px;font-size:11px">
+                <div style="font-weight:900;color:#047857;margin-bottom:3px">✓ Hasil Terkumpul:</div>
+                ${t.submissionLink ? `<a href="${safeHTML(validURL(t.submissionLink))}" target="_blank" rel="noopener noreferrer" style="color:var(--orange);font-weight:800;text-decoration:underline">Buka Tautan Drive/Figma ↗</a>` : ''}
+                ${t.fileMeta ? `<div>File ZIP: <b>${safeHTML(t.fileMeta.name)}</b> (${safeHTML(t.fileMeta.size)})</div>` : ''}
+              </div>
+            ` : ''}
+
+            ${isOwnProfile ? `
+              <div class="claimed-task-actions">
+                <button type="button" class="primary" data-profile-act="submit-task" data-id="${t.id}" style="padding:7px 12px;font-size:11px">
+                  <i data-lucide="upload-cloud" style="width:12px;height:12px"></i>
+                  <span>Kumpulkan Hasil</span>
+                </button>
+                <button type="button" class="secondary" data-profile-act="mark-done" data-id="${t.id}" style="padding:7px 12px;font-size:11px">
+                  <i data-lucide="check" style="width:12px;height:12px"></i>
+                  <span>Tandai Selesai ✓</span>
+                </button>
+                <button type="button" class="secondary" data-profile-act="cancel-claim" data-id="${t.id}" style="padding:7px 10px;font-size:11px;color:#991b1b">
+                  <span>Batal Klaim</span>
+                </button>
+              </div>
+            ` : `
+              <div style="font-size:11px;font-weight:800;color:#555;padding-top:6px;border-top:1px dashed #ccc">
+                ⚡ Sedang dikerjakan oleh ${safeHTML(memberName)}.
+              </div>
+            `}
           </div>
         `;
       });
-      html += `</div>`;
     }
 
-    html += `</div>`;
+    // Other tasks summary below
+    if (otherTasks.length > 0) {
+      html += `
+        <div style="margin-top:14px;border-top:2px dashed #ddd;padding-top:12px">
+          <div style="font-size:11.5px;font-weight:900;margin-bottom:8px;color:#444">
+            📋 JOBDESK LAINNYA MILIK ${safeHTML(memberName.toUpperCase())} (${otherTasks.length})
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            ${otherTasks.map(ot => `
+              <div style="background:var(--paper);border:1px solid var(--ink);padding:8px 10px;display:flex;justify-content:space-between;align-items:center;font-size:11px">
+                <div>
+                  <span style="font-weight:900">#${ot.id}</span>
+                  <span style="margin-left:4px">${safeHTML(ot.title)}</span>
+                </div>
+                <span class="status ${ot.status}" style="font-size:9.5px;padding:2px 6px">
+                  ${ot.status === 'done' ? '✓ SELESAI' : 'AVAILABLE'}
+                </span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
 
-    // Upload Progress Box
+    html += `
+          </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- KOLOM KANAN: PREVIEW JOBDESK HARIAN            -->
+        <!-- ============================================== -->
+        <div class="profile-col-box">
+          <div class="profile-col-header">
+            <h3 class="profile-col-title">
+              <i data-lucide="camera" style="width:17px;height:17px;color:var(--orange)"></i>
+              <span>PREVIEW JOBDESK HARIAN</span>
+            </h3>
+            <div class="profile-col-subtitle">
+              Screenshot tangkapan layar pengerjaan hari ini (misal: layer setting UI, sprite zombie, audio).
+            </div>
+          </div>
+    `;
+
+    // If own profile: show upload form
     if (canPost) {
       html += `
-        <div class="progress-upload-box" id="box-progress-upload">
-          <h3>
-            <i data-lucide="camera" style="width:16px;height:16px;color:var(--orange)"></i>
-            <span>POSTING PREVIEW PROGRES HARI INI (${safeHTML(memberName)})</span>
-          </h3>
-          <div style="font-size:12px;color:#555;margin-bottom:12px">
-            Upload screenshot/gambar bukti pengerjaan kamu (misal: layer setting UI, sprite zombie, background, audio). Bisa drag &amp; drop atau <b>Paste (Ctrl+V)</b> langsung!
+        <div class="progress-upload-box" style="margin-bottom:14px;border:2px solid var(--ink);box-shadow:none;padding:14px">
+          <div style="font-size:12.5px;font-weight:900;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+            <i data-lucide="plus-circle" style="width:14px;height:14px;color:var(--orange)"></i>
+            <span>BAGIKAN PREVIEW HARI INI</span>
+          </div>
+          <div style="font-size:11px;color:#555;margin-bottom:10px">
+            Paste screenshot langsung dengan <b>Ctrl + V</b> atau seret gambar ke kotak bawah:
           </div>
 
           <form id="form-progress-upload">
-            <div class="field">
-              <label for="prog-task-select">JOBDESK YANG DIKERJAKAN *</label>
-              <select id="prog-task-select" required>
+            <div class="field" style="margin-bottom:10px">
+              <label for="prog-task-select" style="font-size:10.5px">JOBDESK YANG DIKERJAKAN *</label>
+              <select id="prog-task-select" required style="padding:8px 10px;font-size:12px">
                 <option value="">-- Pilih Jobdesk Terkait --</option>
-                ${memberTasks.map(t => `<option value="${t.id}" data-title="${safeHTML(t.title)}">[#${t.id}] ${safeHTML(t.title)}</option>`).join('')}
-                <option value="0" data-title="Progres Umum Tim">Lainnya / Progres Umum Diluar Jobdesk</option>
+                ${memberTasks.map(t => `<option value="${t.id}" data-title="${safeHTML(t.title)}">[#${t.id}] ${safeHTML(t.title)} (${t.status === 'doing' ? 'SEDANG DI-CLAIM' : t.status})</option>`).join('')}
+                <option value="0" data-title="Progres Umum Tim">Lainnya / Progres Umum Tim</option>
               </select>
             </div>
 
-            <div class="field">
-              <label for="prog-title">JUDUL UPDATE PROGRES *</label>
-              <input type="text" id="prog-title" required placeholder="Contoh: Preview Layer Setting UI Figma / Animasi Zombie Walk 2 Varian">
+            <div class="field" style="margin-bottom:10px">
+              <label for="prog-title" style="font-size:10.5px">CATATAN / PREVIEW PROGRES *</label>
+              <input type="text" id="prog-title" required placeholder="Contoh: Buat layer setting UI Figma / Animasi zombie walk" style="padding:8px 10px;font-size:12px">
             </div>
 
-            <div class="field">
-              <label for="prog-notes">CATATAN / PENJELASAN SINGKAT</label>
-              <textarea id="prog-notes" placeholder="Contoh: Sudah selesai dibuat dan dieksport ke format PNG 1920x1080. Tinggal testing ke Canvas Unity."></textarea>
-            </div>
-
-            <div class="field">
-              <label>UPLOAD SCREENSHOT / GAMBAR PROGRES *</label>
-              <div class="img-dropzone" id="prog-dropzone">
-                <i data-lucide="image-plus" style="width:28px;height:28px;color:var(--ink);margin-bottom:4px"></i>
-                <div style="font-size:12.5px;font-weight:900">Klik untuk pilih gambar atau seret file ke sini</div>
-                <div style="font-size:11px;color:#666;margin-top:2px">Bisa juga langsung <b>Ctrl + V</b> untuk Paste screenshot clipboard</div>
+            <div class="field" style="margin-bottom:10px">
+              <label style="font-size:10.5px">SCREENSHOT GAMBAR (DRAG / PASTE CTRL+V) *</label>
+              <div class="img-dropzone" id="prog-dropzone" style="padding:14px">
+                <i data-lucide="image-plus" style="width:24px;height:24px;color:var(--ink);margin-bottom:2px"></i>
+                <div style="font-size:11.5px;font-weight:900">Klik / Tarik file / Tekan Ctrl+V</div>
                 <input type="file" id="prog-file-input" style="display:none" accept="image/*">
               </div>
 
               <div id="prog-img-preview-wrap" style="display:none">
-                <div class="img-preview-container">
+                <div class="img-preview-container" style="max-height:180px">
                   <img id="prog-img-preview" src="" alt="Preview">
                   <button type="button" class="img-preview-remove" id="btn-remove-prog-img">Ganti / Hapus ✕</button>
                 </div>
               </div>
             </div>
 
-            <div style="display:flex;justify-content:flex-end;margin-top:14px">
-              <button type="submit" class="primary" id="btn-submit-prog" style="padding:10px 18px">
-                <i data-lucide="send" style="width:14px;height:14px"></i>
-                <span id="btn-submit-prog-text">🚀 Posting Progres ke Profil</span>
-              </button>
-            </div>
+            <button type="submit" class="primary" id="btn-submit-prog" style="width:100%;padding:9px;font-size:12px">
+              <i data-lucide="send" style="width:13px;height:13px"></i>
+              <span id="btn-submit-prog-text">🚀 Bagikan Preview Progres Hari Ini</span>
+            </button>
           </form>
+        </div>
+      `;
+    }
+
+    // Latest progress preview card
+    if (latestUpdate) {
+      html += `
+        <div style="font-size:11.5px;font-weight:900;letter-spacing:0.5px;color:#444;margin-bottom:6px">
+          🌟 PREVIEW TERAKHIR DARI ${safeHTML(memberName.toUpperCase())}
+        </div>
+        <div class="daily-preview-featured">
+          ${latestUpdate.imageData ? `
+            <div class="daily-preview-img-wrap" data-lightbox-src="${latestUpdate.imageData}" data-title="${safeHTML(latestUpdate.title)}" data-author="${safeHTML(latestUpdate.author)}" data-date="${safeHTML(latestUpdate.dateStr || '')}" data-notes="${safeHTML(latestUpdate.notes || '')}">
+              <img src="${latestUpdate.imageData}" alt="${safeHTML(latestUpdate.title)}" loading="lazy">
+              <div class="post-img-overlay">
+                <i data-lucide="maximize-2" style="width:16px;height:16px"></i>
+                <span>KLIK ZOOM PERBESAR</span>
+              </div>
+            </div>
+          ` : ''}
+          <div class="daily-preview-content">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:6px">
+              <span class="post-task-badge" style="margin:0">${safeHTML(latestUpdate.taskTitle || 'Jobdesk')}</span>
+              <span style="font-size:10px;font-weight:700;color:#666">${safeHTML(latestUpdate.dateStr || '')}</span>
+            </div>
+            <div style="font-size:13.5px;font-weight:900;margin-bottom:4px">${safeHTML(latestUpdate.title)}</div>
+            ${latestUpdate.notes ? `<div style="font-size:11.5px;color:#555;line-height:1.4">${safeHTML(latestUpdate.notes)}</div>` : ''}
+          </div>
         </div>
       `;
     } else {
       html += `
-        <div style="background:#f0fdf4;border:2px solid #16a34a;padding:12px 14px;box-shadow:3px 3px 0 var(--ink);margin-bottom:18px;display:flex;align-items:center;gap:10px">
-          <i data-lucide="eye" style="width:20px;height:20px;color:#16a34a;flex-shrink:0"></i>
-          <div style="font-size:12px;color:#14532d;line-height:1.4">
-            <b>Mode Peninjau:</b> Anda sedang melihat profil dan rekap perkembangan milik <b>${safeHTML(memberName)}</b>.
-            ${currentUser ? `Anda saat ini login sebagai <b>${safeHTML(currentUser)}</b>.` : `Silakan login jika ingin mengupdate progres Anda sendiri.`}
+        <div class="empty" style="padding:28px 16px">
+          <i data-lucide="image" style="width:36px;height:36px;color:#888;margin-bottom:8px"></i>
+          <div style="font-size:13px;font-weight:900">Belum ada preview progres harian yang dibagikan oleh ${safeHTML(memberName)}.</div>
+          <div style="font-size:11.5px;color:#666;margin-top:4px">
+            ${isOwnProfile ? 'Gunakan form di atas untuk mengunggah screenshot progres kamu!' : `Nantikan update screenshot hasil kerja dari ${safeHTML(memberName)}!`}
           </div>
         </div>
       `;
     }
 
-    // Member's Progress Gallery
     html += `
-      <div style="margin-top:20px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <h3 style="font-size:16px;font-weight:900;letter-spacing:-0.5px">
-            📸 RIWAYAT PROGRES GAMBAR ${safeHTML(memberName.toUpperCase())} (${memberUpdates.length})
-          </h3>
-          <span style="font-size:11px;font-weight:800;color:#555">Klik gambar untuk zoom</span>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- BAGIAN BAWAH: RIWAYAT LOG PROGRES HARIAN       -->
+      <!-- ============================================== -->
+      <div class="profile-history-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+          <div>
+            <h3 style="font-size:16px;font-weight:900;letter-spacing:-0.5px;margin:0;display:flex;align-items:center;gap:6px">
+              <i data-lucide="history" style="width:18px;height:18px;color:var(--orange)"></i>
+              <span>RIWAYAT LOG PROGRES HARIAN ${safeHTML(memberName.toUpperCase())} (${memberUpdates.length})</span>
+            </h3>
+            <div style="font-size:11.5px;color:#555;font-weight:700;margin-top:3px">
+              Seluruh riwayat screenshot perkembangan yang pernah dibagikan oleh ${safeHTML(memberName)}. Klik gambar untuk zoom.
+            </div>
+          </div>
         </div>
     `;
 
     if (memberUpdates.length === 0) {
       html += `
-        <div class="empty">
-          <i data-lucide="image" style="width:32px;height:32px;color:#888;margin-bottom:6px"></i>
-          <div>${safeHTML(memberName)} belum mengunggah gambar progres.</div>
-          ${isOwnProfile ? '<div style="font-size:11.5px;color:#666;margin-top:4px">Gunakan form di atas untuk membagikan screenshot perkembangan tugas kamu!</div>' : ''}
+        <div class="empty" style="padding:24px 16px;font-size:12px">
+          Belum ada riwayat postingan progres sebelumnya.
         </div>
       `;
     } else {
@@ -1142,7 +1188,7 @@
                 <img src="${p.imageData}" alt="${safeHTML(p.title)}" loading="lazy">
                 <div class="post-img-overlay">
                   <i data-lucide="maximize-2" style="width:16px;height:16px"></i>
-                  <span>KLIK PERBESAR</span>
+                  <span>KLIK ZOOM</span>
                 </div>
               </div>
             ` : ''}
@@ -1166,14 +1212,75 @@
       html += `</div>`;
     }
 
-    html += `</div>`;
+    html += `
+        <div style="display:flex;justify-content:center;margin-top:20px">
+          <button type="button" class="btn-back" id="btn-back-to-tasks-bottom" style="padding:10px 18px;font-size:12.5px;font-weight:900;background:var(--yellow);border:2px solid var(--ink);cursor:pointer;box-shadow:3px 3px 0 var(--ink)">
+            ← Kembali ke Task Board
+          </button>
+        </div>
+      </div>
+    `;
+
     container.innerHTML = html;
+
+    // Bind event handlers inside profile view:
+    const backBtnTop = $('btn-back-to-tasks-top');
+    if (backBtnTop) backBtnTop.addEventListener('click', backToTaskBoard);
+
+    const backBtnBottom = $('btn-back-to-tasks-bottom');
+    if (backBtnBottom) backBtnBottom.addEventListener('click', backToTaskBoard);
+
+    const claimMoreBtn = $('btn-claim-more-tasks');
+    if (claimMoreBtn) claimMoreBtn.addEventListener('click', backToTaskBoard);
+
+    // Member tabs switcher in profile top bar
+    document.querySelectorAll('#profile-tabs-bar [data-member-tab]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        openProfilePage(btn.dataset.memberTab);
+      });
+    });
+
+    // Claimed task actions in profile (submit, done, cancel claim)
+    container.querySelectorAll('[data-profile-act]').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const act = btn.dataset.profileAct;
+        const taskId = Number(btn.dataset.id);
+        const task = tasks.find(t => t.id === taskId);
+        if (!task) return;
+
+        if (act === 'submit-task') {
+          openSubmitModal(taskId);
+          return;
+        }
+
+        if (act === 'mark-done') {
+          await API.updateStatus(taskId, 'done');
+          task.status = 'done';
+          saveLocalBackup();
+          renderMemberProfile(memberName);
+          showToast(`Tugas #${taskId} ditandai selesai! ✓`);
+          return;
+        }
+
+        if (act === 'cancel-claim') {
+          const ok = confirm(`Batalkan klaim tugas #${taskId}? Status akan kembali menjadi Available.`);
+          if (!ok) return;
+          await API.updateStatus(taskId, 'open');
+          task.status = 'open';
+          saveLocalBackup();
+          renderMemberProfile(memberName);
+          showToast(`Klaim tugas #${taskId} dibatalkan.`, '↩');
+          return;
+        }
+      });
+    });
 
     if (canPost) {
       setupProgressUploadForm(memberName);
     }
 
     bindPostCardEvents(container);
+    refreshIcons();
   }
 
   function setupProgressUploadForm(memberName) {
@@ -1246,7 +1353,7 @@
       if (res && res.success) {
         stagedProgressImg = null;
         await loadProgressUpdates();
-        renderProfileContent();
+        renderMemberProfile(activeProfileMember);
         showToast('Progres harian berhasil diupload & tersinkronisasi! 🚀');
       } else {
         alert('Gagal mengupload progres: ' + (res.error || 'Koneksi error'));
@@ -1298,7 +1405,7 @@
         const res = await API.deleteProgressUpdate(id);
         if (res && res.success) {
           await loadProgressUpdates();
-          renderProfileContent();
+          renderMemberProfile(activeProfileMember);
           showToast('Postingan progres telah dihapus.');
         } else {
           alert('Gagal menghapus progres!');
@@ -1330,11 +1437,7 @@
     $('btn-open-login').addEventListener('click', () => openLoginModal());
     document.querySelectorAll('.member-pill[data-user]').forEach(pill => {
       pill.addEventListener('click', () => {
-        if (currentUser) {
-          openProfileView(pill.dataset.user);
-        } else {
-          openLoginModal(pill.dataset.user);
-        }
+        openProfilePage(pill.dataset.user);
       });
     });
 
@@ -1395,36 +1498,11 @@
       showToast(`Menampilkan tugas milik ${currentUser} ⭐`);
     });
 
-    // Main In-Page View Switcher
-    const btnViewTasks = $('btn-view-tasks');
-    if (btnViewTasks) {
-      btnViewTasks.addEventListener('click', () => switchMainView('tasks'));
-    }
-
-    const btnViewProfile = $('btn-view-profile');
-    if (btnViewProfile) {
-      btnViewProfile.addEventListener('click', () => {
-        openProfileView(currentProfileTab || (currentUser || 'feed'));
-      });
-    }
-
-    const btnBackToTasks = $('btn-back-to-tasks');
-    if (btnBackToTasks) {
-      btnBackToTasks.addEventListener('click', () => switchMainView('tasks'));
-    }
-
-    // Profile & Team Feed Navigation
+    // Dedicated Profile Navigation
     const myProfileBtn = $('btn-open-my-profile');
     if (myProfileBtn) {
       myProfileBtn.addEventListener('click', () => {
-        openProfileView(currentUser || 'feed');
-      });
-    }
-
-    const teamFeedBtn = $('btn-open-team-feed');
-    if (teamFeedBtn) {
-      teamFeedBtn.addEventListener('click', () => {
-        openProfileView('feed');
+        openProfilePage(currentUser || 'Reihan');
       });
     }
 
@@ -1437,19 +1515,6 @@
     if (lightboxWrap) {
       lightboxWrap.addEventListener('click', (e) => {
         if (e.target === lightboxWrap) closeLightbox();
-      });
-    }
-
-    const profileTabs = $('profile-tabs-bar');
-    if (profileTabs) {
-      profileTabs.addEventListener('click', (e) => {
-        const btn = e.target.closest('[data-tab]');
-        if (!btn) return;
-        currentProfileTab = btn.dataset.tab;
-        document.querySelectorAll('#profile-tabs-bar .profile-tab').forEach(b => {
-          b.classList.toggle('active', b === btn);
-        });
-        renderProfileContent();
       });
     }
 
@@ -1715,13 +1780,19 @@
       render();
     });
 
-    // Filters: Member
+    // Filters: Member / Profile
     $('member-filters').addEventListener('click', (e) => {
       const btn = e.target.closest('[data-member]');
       if (!btn) return;
-      activeMemberFilter = btn.dataset.member;
-      document.querySelectorAll('#member-filters .filter').forEach(f => f.classList.toggle('active', f === btn));
-      render();
+      const member = btn.dataset.member;
+      if (member === 'all') {
+        activeMemberFilter = 'all';
+        document.querySelectorAll('#member-filters .filter').forEach(f => f.classList.toggle('active', f === btn));
+        render();
+        showToast('Menampilkan semua jobdesk tim.');
+      } else {
+        openProfilePage(member);
+      }
     });
 
     // Search query
@@ -1730,8 +1801,14 @@
       render();
     });
 
-    // Task Card Actions
+    // Task Card Actions & Member Profile Click
     $('tasks').addEventListener('click', async (e) => {
+      const profileBadge = e.target.closest('[data-view-profile]');
+      if (profileBadge) {
+        openProfilePage(profileBadge.dataset.viewProfile);
+        return;
+      }
+
       const btn = e.target.closest('[data-act]');
       if (!btn) return;
       const act = btn.dataset.act;
