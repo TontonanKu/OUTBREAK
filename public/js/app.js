@@ -718,11 +718,11 @@
             </a>
           ` : ''}
 
-          ${hasSubmission ? `
+          ${hasSubmission && (isMine || (currentUser && isReihan())) ? `
             <div class="submission-box">
               <div class="submission-title">
                 <span style="display:flex;align-items:center;gap:4px">
-                  <i data-lucide="check-check" style="width:12px;height:12px"></i> HASIL TERKUMPUL
+                  <i data-lucide="check-check" style="width:12px;height:12px"></i> HASIL TERKUMPUL (VERIFIKASI MEMBER)
                 </span>
                 <span>${t.status === 'done' ? 'SELESAI' : 'PROGRES'}</span>
               </div>
@@ -857,12 +857,12 @@
     `).join('');
 
     let submissionInfoHtml = '';
-    if (task.submissionLink || task.fileMeta) {
+    if ((task.submissionLink || task.fileMeta) && (isMine || (currentUser && isReihan()))) {
       submissionInfoHtml = `
         <div class="detail-box" style="background:#f0fdf4;border-color:#16a34a">
           <div class="detail-box-head" style="color:#15803d;border-bottom-color:#16a34a">
             <i data-lucide="check-check" style="width:16px;height:16px"></i>
-            <span>HASIL TUGAS TELAH DIKUMPULKAN</span>
+            <span>HASIL TUGAS TELAH DIKUMPULKAN (VERIFIKASI MEMBER)</span>
           </div>
           ${task.submissionLink ? `
             <div style="margin-bottom:8px">
@@ -1168,6 +1168,12 @@
   // SUBMISSIONS ARCHIVE MODAL (Rekap Hasil & Folder Uploads)
   // ----------------------------------------------------
   async function openArchiveModal() {
+    if (!currentUser) {
+      alert('Akses Dibatasi: Rekap hasil pengumpulan & folder uploads hanya dapat diakses oleh member tim Outbreak!');
+      openLoginModal();
+      return;
+    }
+
     const data = await API.getSubmissions();
     const container = $('archive-content-container');
     const submissions = data && data.submissions ? data.submissions : [];
@@ -1485,10 +1491,10 @@
               </a>
             ` : ''}
 
-            ${hasSubmission ? `
+            ${hasSubmission && (isOwnProfile || isReihan()) ? `
               <div style="background:#fff;border:1.5px solid var(--ink);padding:8px 10px;margin-bottom:10px;font-size:11px">
                 <div style="font-weight:900;color:#047857;margin-bottom:3px;display:flex;align-items:center;gap:4px">
-                  <i data-lucide="check-check" style="width:12px;height:12px"></i> Hasil Terkumpul:
+                  <i data-lucide="check-check" style="width:12px;height:12px"></i> Hasil Terkumpul (Verifikasi Member):
                 </div>
                 ${t.submissionLink ? `<a href="${safeHTML(validURL(t.submissionLink))}" target="_blank" rel="noopener noreferrer" style="color:var(--orange);font-weight:800;text-decoration:underline">Buka Tautan Drive/Figma ↗</a>` : ''}
                 ${t.fileMeta ? `<div>File ZIP: <b>${safeHTML(t.fileMeta.name)}</b> (${safeHTML(t.fileMeta.size)})</div>` : ''}
