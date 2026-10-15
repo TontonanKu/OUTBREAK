@@ -229,7 +229,81 @@ const API = {
     }
   },
 
-  setupRealtimeListener(onUpdate) {
+  // ----------------------------------------------------
+  // DAILY PROGRESS UPDATES & SCREENSHOTS (FIREBASE RTDB)
+  // ----------------------------------------------------
+  async getProgressUpdates() {
+    try {
+      const res = await fetch(`${FIREBASE_DB_URL}/progress_updates.json?t=${Date.now()}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data) {
+          const list = Object.values(data);
+          list.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+          try {
+            localStorage.setItem('rrby_outbreak_progress_updates', JSON.stringify(list));
+          } catch (e) {}
+          return list;
+        }
+        return [];
+      }
+    } catch (e) {
+      console.warn('Firebase getProgressUpdates issue, using local cache', e);
+    }
+
+    const local = localStorage.getItem('rrby_outbreak_progress_updates');
+    if (local) {
+      try {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (e) {}
+    }
+    return [];
+  },
+
+  async addProgressUpdate(updateObj) {
+    if (!updateObj.id) {
+      updateObj.id = 'prog_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+    }
+    if (!updateObj.timestamp) {
+      updateObj.timestamp = Date.now();
+    }
+    if (!updateObj.dateStr) {
+      updateObj.dateStr = new Date().toLocaleString('id-ID', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    try {
+      const res = await fetch(`${FIREBASE_DB_URL}/progress_updates/${updateObj.id}.json`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updateObj)
+      });
+      return { success: res.ok, update: updateObj };
+    } catch (e) {
+      console.error('Failed to post progress update to Firebase', e);
+      return { success: false, error: e.message };
+    }
+  },
+
+  async deleteProgressUpdate(updateId) {
+    try {
+      const res = await fetch(`${FIREBASE_DB_URL}/progress_updates/${updateId}.json`, {
+        method: 'DELETE'
+      });
+      return { success: res.ok };
+    } catch (e) {
+      console.error('Failed to delete progress update from Firebase', e);
+      return { success: false, error: e.message };
+    }
+  },
+
+  setupRealtimeListener(onUpdate, onProgressUpdate) {
     if (this.eventSource) {
       try { this.eventSource.close(); } catch (e) {}
     }
@@ -251,10 +325,25 @@ const API = {
         }
       });
       this.eventSource.onerror = () => {
-        // Automatically handled by browser reconnect
+        // Handled by browser auto-reconnect
       };
     } catch (e) {
       console.warn('EventSource SSE connection failed', e);
+    }
+
+    if (onProgressUpdate) {
+      try {
+        if (this.progressEventSource) {
+          try { this.progressEventSource.close(); } catch (e) {}
+        }
+        this.progressEventSource = new EventSource(`${FIREBASE_DB_URL}/progress_updates.json`);
+        this.progressEventSource.addEventListener('put', async () => {
+          const updates = await this.getProgressUpdates();
+          if (typeof onProgressUpdate === 'function') onProgressUpdate(updates);
+        });
+      } catch (e) {
+        console.warn('Progress EventSource failed', e);
+      }
     }
   }
 };

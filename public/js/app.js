@@ -130,12 +130,42 @@
     }
   } catch (e) {}
 
+  const MEMBER_INFO = {
+    Reihan: {
+      role: "Lead & Unity Developer",
+      icon: "laptop",
+      color: "#ff4b0b",
+      tagline: "Arsitek sistem game Unity 6, AudioManager, logic gameplay, dan integrasi aset tim."
+    },
+    Bintang: {
+      role: "UI Designer & SFX Audio",
+      icon: "palette",
+      color: "#ffcf05",
+      tagline: "Perancang UI Figma (1920x1080 16:9), layer daily/cash/senjata, dan SFX audio."
+    },
+    Royan: {
+      role: "Character, BG & Voice Artist",
+      icon: "shield",
+      color: "#3b82f6",
+      tagline: "Illustrator 3 hero (Alek, Erika, Hank), background 5 misi berjenjang, dan pengisi suara."
+    },
+    Eby: {
+      role: "Zombie Artist & Animator",
+      icon: "skull",
+      color: "#10b981",
+      tagline: "Spesialis pembuat 6 varian zombie Outbreak lengkap dengan 6 state animasi format PNG."
+    }
+  };
+
   let currentUser = localStorage.getItem('rrby_outbreak_current_user') || null;
   let activeStatusFilter = 'all';
   let activeMemberFilter = 'all';
   let searchQuery = '';
   let stagedFile = null;
   let editTaskId = null;
+  let progressUpdates = [];
+  let currentProfileTab = 'feed';
+  let stagedProgressImg = null;
 
   const $ = id => document.getElementById(id);
 
@@ -183,6 +213,9 @@
     updateAuthUI();
     render(); // Immediate synchronous render! All 9 tasks display right away without waiting!
 
+    // Load progress updates
+    loadProgressUpdates();
+
     // Connect to Firebase in the background
     await syncWithCloud();
     startLiveSync();
@@ -199,6 +232,7 @@
       // If cloud is somehow empty, seed DEFAULT_TASKS
       await API.saveAllTasks(DEFAULT_TASKS);
     }
+    await loadProgressUpdates();
     updateSyncUI();
   }
 
@@ -265,18 +299,32 @@
   let syncPollingInterval = null;
   function startLiveSync() {
     // 1. Instant Realtime WebSocket / EventSource Listener via Firebase
-    API.setupRealtimeListener((remoteTasks) => {
-      if (remoteTasks && remoteTasks.length) {
-        tasks = remoteTasks;
-        saveLocalBackup();
-        render();
-        console.log('⚡ Realtime WebSocket update received from Firebase!');
+    API.setupRealtimeListener(
+      (remoteTasks) => {
+        if (remoteTasks && remoteTasks.length) {
+          tasks = remoteTasks;
+          saveLocalBackup();
+          render();
+          console.log('⚡ Realtime WebSocket update received from Firebase!');
+        }
+      },
+      (remoteUpdates) => {
+        if (remoteUpdates) {
+          progressUpdates = remoteUpdates;
+          updateFeedBadge();
+          if ($('modal-profile-wrap') && $('modal-profile-wrap').classList.contains('show')) {
+            renderProfileContent();
+          }
+          console.log('📸 Realtime progress update received from Firebase!');
+        }
       }
-    });
+    );
 
     // 2. Fallback periodic polling every 4 seconds
+    let pollCount = 0;
     if (syncPollingInterval) clearInterval(syncPollingInterval);
     syncPollingInterval = setInterval(async () => {
+      pollCount++;
       if (API.isServerAvailable || API.isCloudConnected) {
         const remoteTasks = await API.getTasks();
         if (remoteTasks && remoteTasks.length) {
@@ -287,6 +335,18 @@
             saveLocalBackup();
             render();
             console.log('🔄 Data tugas tim diperbarui secara realtime dari Firebase.');
+          }
+        }
+
+        // Poll progress updates every 8 seconds (every 2 cycles)
+        if (pollCount % 2 === 0) {
+          const latestProgs = await API.getProgressUpdates();
+          if (latestProgs && latestProgs.length !== progressUpdates.length) {
+            progressUpdates = latestProgs;
+            updateFeedBadge();
+            if ($('modal-profile-wrap') && $('modal-profile-wrap').classList.contains('show')) {
+              renderProfileContent();
+            }
           }
         }
       }
@@ -684,6 +744,567 @@
   }
 
   // ----------------------------------------------------
+  // PROFILE & DAILY PROGRESS LOG CONTROLLER
+  // ----------------------------------------------------
+  function compressImage(file, maxWidth = 1000, maxHeight = 1000, quality = 0.72) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+          if (width > maxWidth || height > maxHeight) {
+            if (width / height > maxWidth / maxHeight) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            } else {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL('image/jpeg', quality);
+          resolve(dataUrl);
+        };
+        img.onerror = () => reject(new Error('Gagal memuat file gambar'));
+        img.src = e.target.result;
+      };
+      reader.onerror = () => reject(new Error('Gagal membaca file gambar'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function loadProgressUpdates() {
+    progressUpdates = await API.getProgressUpdates();
+    updateFeedBadge();
+  }
+
+  function updateFeedBadge() {
+    const badge = $('feed-count-badge');
+    if (badge) {
+      badge.textContent = progressUpdates.length;
+    }
+  }
+
+  function openProfileModal(tab = 'feed') {
+    currentProfileTab = tab || (currentUser || 'feed');
+    document.querySelectorAll('#profile-tabs-bar .profile-tab').forEach(b => {
+      b.classList.toggle('active', b.dataset.tab === currentProfileTab);
+    });
+    renderProfileContent();
+    $('modal-profile-wrap').classList.add('show');
+    refreshIcons();
+  }
+
+  function closeProfileModal() {
+    $('modal-profile-wrap').classList.remove('show');
+    stagedProgressImg = null;
+  }
+
+  function renderProfileContent() {
+    const container = $('profile-modal-body');
+    if (!container) return;
+
+    if (currentProfileTab === 'feed') {
+      renderTeamFeed(container);
+    } else {
+      renderMemberProfile(container, currentProfileTab);
+    }
+    refreshIcons();
+  }
+
+  function renderTeamFeed(container) {
+    let html = `
+      <div style="background:var(--yellow);border:2.5px solid var(--ink);padding:14px;box-shadow:3px 3px 0 var(--ink);margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <div>
+          <div style="font-size:10.5px;font-weight:900;letter-spacing:1px;color:#444">TIMELINE AKTIVITAS HARIAN</div>
+          <div style="font-size:16px;font-weight:900">🌐 LIVE FEED PROGRES HARIAN TIM OUTBREAK</div>
+          <div style="font-size:11px;color:#333;font-weight:700;margin-top:2px">
+            Pantau screenshot perkembangan aset, desain, audio &amp; kode secara realtime dari 4 anggota tim.
+          </div>
+        </div>
+        ${currentUser ? `
+          <button type="button" class="primary" id="btn-quick-post-progress" style="padding:7px 12px;font-size:11.5px">
+            <i data-lucide="plus-circle" style="width:13px;height:13px"></i>
+            <span>Upload Progres ${safeHTML(currentUser)}</span>
+          </button>
+        ` : `
+          <button type="button" class="secondary" id="btn-feed-to-login" style="padding:7px 12px;font-size:11.5px">
+            <i data-lucide="key-round" style="width:13px;height:13px"></i>
+            <span>Login untuk Posting</span>
+          </button>
+        `}
+      </div>
+    `;
+
+    if (!progressUpdates || progressUpdates.length === 0) {
+      html += `
+        <div class="empty">
+          <i data-lucide="image" style="width:36px;height:36px;color:#888;margin-bottom:8px"></i>
+          <div>Belum ada update progres harian gambar yang diposting.</div>
+          <div style="font-size:11.5px;color:#666;font-weight:700;margin-top:4px">
+            Setiap anggota tim dapat mengupload screenshot progres kerja mereka di tab masing-masing.
+          </div>
+        </div>
+      `;
+    } else {
+      html += `<div class="progress-feed-grid">`;
+      progressUpdates.forEach(p => {
+        const info = MEMBER_INFO[p.author] || { color: '#ff4b0b', role: 'Anggota Tim' };
+        html += `
+          <article class="progress-post-card" data-post-id="${p.id}">
+            <div class="post-header">
+              <div class="post-author-box">
+                <div class="post-author-avatar" style="background:${info.color}">
+                  ${p.author ? p.author.charAt(0).toUpperCase() : '?'}
+                </div>
+                <div>
+                  <div class="post-author-name">${safeHTML(p.author)}</div>
+                  <div class="post-date">${safeHTML(p.dateStr || '')}</div>
+                </div>
+              </div>
+              <span class="post-task-badge" style="margin:0">${safeHTML(p.taskTitle || 'Progres Tugas')}</span>
+            </div>
+
+            ${p.imageData ? `
+              <div class="post-img-wrap" data-lightbox-src="${p.imageData}" data-title="${safeHTML(p.title)}" data-author="${safeHTML(p.author)}" data-date="${safeHTML(p.dateStr || '')}" data-notes="${safeHTML(p.notes || '')}">
+                <img src="${p.imageData}" alt="${safeHTML(p.title)}" loading="lazy">
+                <div class="post-img-overlay">
+                  <i data-lucide="maximize-2" style="width:16px;height:16px"></i>
+                  <span>KLIK PERBESAR</span>
+                </div>
+              </div>
+            ` : ''}
+
+            <div class="post-body">
+              <h4 class="post-title">${safeHTML(p.title)}</h4>
+              ${p.notes ? `<p class="post-notes">${safeHTML(p.notes)}</p>` : ''}
+            </div>
+
+            <div class="post-footer">
+              <span style="font-weight:800;color:#666">⚡ Outbreak 2D</span>
+              ${(currentUser === p.author || isReihan()) ? `
+                <button type="button" class="btn-post-del" data-del-prog="${p.id}">
+                  <i data-lucide="trash-2" style="width:11px;height:11px"></i> Hapus
+                </button>
+              ` : ''}
+            </div>
+          </article>
+        `;
+      });
+      html += `</div>`;
+    }
+
+    container.innerHTML = html;
+
+    const quickPostBtn = $('btn-quick-post-progress');
+    if (quickPostBtn) {
+      quickPostBtn.addEventListener('click', () => {
+        openProfileModal(currentUser);
+      });
+    }
+
+    const feedLoginBtn = $('btn-feed-to-login');
+    if (feedLoginBtn) {
+      feedLoginBtn.addEventListener('click', () => {
+        closeProfileModal();
+        openLoginModal();
+      });
+    }
+
+    bindPostCardEvents(container);
+  }
+
+  function renderMemberProfile(container, memberName) {
+    const info = MEMBER_INFO[memberName] || {
+      role: 'Anggota Tim Outbreak',
+      icon: 'user',
+      color: '#ff4b0b',
+      tagline: 'Tim Pengembang Game 2D Zombie Survival Outbreak.'
+    };
+
+    const memberTasks = tasks.filter(t => 
+      (t.owner && t.owner.toLowerCase() === memberName.toLowerCase()) ||
+      (t.claimedBy && t.claimedBy.toLowerCase() === memberName.toLowerCase())
+    );
+
+    const doingCount = memberTasks.filter(t => t.status === 'doing').length;
+    const doneCount = memberTasks.filter(t => t.status === 'done').length;
+    const memberUpdates = progressUpdates.filter(p => p.author && p.author.toLowerCase() === memberName.toLowerCase());
+
+    const isOwnProfile = currentUser && currentUser.toLowerCase() === memberName.toLowerCase();
+    const canPost = isOwnProfile || isReihan();
+
+    let html = `
+      <!-- Hero Card -->
+      <div class="profile-hero-card">
+        <div class="profile-avatar-lg" style="background:${info.color}">
+          ${memberName.charAt(0).toUpperCase()}
+        </div>
+        <div class="profile-meta-wrap">
+          <div class="profile-name-title">
+            <span>${safeHTML(memberName)}</span>
+            <span class="profile-role-pill">
+              <i data-lucide="${info.icon}" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:2px"></i>
+              ${safeHTML(info.role)}
+            </span>
+          </div>
+          <div class="profile-tagline">${safeHTML(info.tagline)}</div>
+
+          <div class="profile-stats-grid">
+            <div class="profile-mini-stat">
+              <div class="val">${memberTasks.length}</div>
+              <div class="lbl">Total Jobdesk</div>
+            </div>
+            <div class="profile-mini-stat" style="background:#fef08a">
+              <div class="val" style="color:#854d0e">${doingCount}</div>
+              <div class="lbl">Dikerjakan</div>
+            </div>
+            <div class="profile-mini-stat" style="background:#b8f5a5">
+              <div class="val" style="color:#065f46">${doneCount}</div>
+              <div class="lbl">Selesai</div>
+            </div>
+            <div class="profile-mini-stat" style="background:#fed7aa">
+              <div class="val" style="color:#9a3412">${memberUpdates.length}</div>
+              <div class="lbl">Foto Progres</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Claimed Tasks Section -->
+      <div style="background:#fff;border:2.5px solid var(--ink);box-shadow:3.5px 3.5px 0 var(--ink);padding:14px;margin-bottom:18px">
+        <div style="font-size:11px;font-weight:900;letter-spacing:1px;color:#555">JOBDESK RESMI &amp; KLAIM ANGGOTA</div>
+        <div style="font-size:15px;font-weight:900;margin:2px 0 10px">📋 DAFTAR TUGAS MILIK ${safeHTML(memberName.toUpperCase())} (${memberTasks.length})</div>
+    `;
+
+    if (memberTasks.length === 0) {
+      html += `<div style="font-size:12px;color:#666;font-style:italic">Belum ada jobdesk yang tercatat untuk ${safeHTML(memberName)}.</div>`;
+    } else {
+      html += `<div style="display:flex;flex-direction:column;gap:8px">`;
+      memberTasks.forEach(t => {
+        let statusBadge = '';
+        if (t.status === 'open') {
+          statusBadge = '<span style="background:#e5e7eb;border:1px solid #111;font-size:10px;font-weight:900;padding:2px 6px">AVAILABLE</span>';
+        } else if (t.status === 'doing') {
+          statusBadge = '<span style="background:var(--yellow);border:1px solid #111;font-size:10px;font-weight:900;padding:2px 6px;color:#854d0e">⚡ SEDANG DIKERJAKAN</span>';
+        } else {
+          statusBadge = '<span style="background:var(--green-light);border:1px solid #065f46;font-size:10px;font-weight:900;padding:2px 6px;color:#065f46">✓ SELESAI</span>';
+        }
+
+        html += `
+          <div style="background:var(--paper);border:1.5px solid var(--ink);padding:10px 12px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+                <span style="font-size:10px;font-weight:900;background:#fff;border:1px solid var(--ink);padding:1px 5px">#${t.id} ${safeHTML(t.category)}</span>
+                ${statusBadge}
+              </div>
+              <div style="font-size:12.5px;font-weight:900">${safeHTML(t.title)}</div>
+              <div style="font-size:11px;color:#555;margin-top:3px;line-height:1.35;white-space:pre-line">${safeHTML(t.desc.split('\n')[0])}</div>
+            </div>
+            ${t.submissionLink ? `
+              <a href="${safeHTML(validURL(t.submissionLink))}" target="_blank" rel="noopener noreferrer" style="font-size:11px;font-weight:900;color:#047857;text-decoration:underline;white-space:nowrap;padding:4px 6px;background:#fff;border:1px solid var(--ink)">
+                Tautan Hasil ↗
+              </a>
+            ` : ''}
+          </div>
+        `;
+      });
+      html += `</div>`;
+    }
+
+    html += `</div>`;
+
+    // Upload Progress Box
+    if (canPost) {
+      html += `
+        <div class="progress-upload-box" id="box-progress-upload">
+          <h3>
+            <i data-lucide="camera" style="width:16px;height:16px;color:var(--orange)"></i>
+            <span>POSTING PREVIEW PROGRES HARI INI (${safeHTML(memberName)})</span>
+          </h3>
+          <div style="font-size:12px;color:#555;margin-bottom:12px">
+            Upload screenshot/gambar bukti pengerjaan kamu (misal: layer setting UI, sprite zombie, background, audio). Bisa drag &amp; drop atau <b>Paste (Ctrl+V)</b> langsung!
+          </div>
+
+          <form id="form-progress-upload">
+            <div class="field">
+              <label for="prog-task-select">JOBDESK YANG DIKERJAKAN *</label>
+              <select id="prog-task-select" required>
+                <option value="">-- Pilih Jobdesk Terkait --</option>
+                ${memberTasks.map(t => `<option value="${t.id}" data-title="${safeHTML(t.title)}">[#${t.id}] ${safeHTML(t.title)}</option>`).join('')}
+                <option value="0" data-title="Progres Umum Tim">Lainnya / Progres Umum Diluar Jobdesk</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="prog-title">JUDUL UPDATE PROGRES *</label>
+              <input type="text" id="prog-title" required placeholder="Contoh: Preview Layer Setting UI Figma / Animasi Zombie Walk 2 Varian">
+            </div>
+
+            <div class="field">
+              <label for="prog-notes">CATATAN / PENJELASAN SINGKAT</label>
+              <textarea id="prog-notes" placeholder="Contoh: Sudah selesai dibuat dan dieksport ke format PNG 1920x1080. Tinggal testing ke Canvas Unity."></textarea>
+            </div>
+
+            <div class="field">
+              <label>UPLOAD SCREENSHOT / GAMBAR PROGRES *</label>
+              <div class="img-dropzone" id="prog-dropzone">
+                <i data-lucide="image-plus" style="width:28px;height:28px;color:var(--ink);margin-bottom:4px"></i>
+                <div style="font-size:12.5px;font-weight:900">Klik untuk pilih gambar atau seret file ke sini</div>
+                <div style="font-size:11px;color:#666;margin-top:2px">Bisa juga langsung <b>Ctrl + V</b> untuk Paste screenshot clipboard</div>
+                <input type="file" id="prog-file-input" style="display:none" accept="image/*">
+              </div>
+
+              <div id="prog-img-preview-wrap" style="display:none">
+                <div class="img-preview-container">
+                  <img id="prog-img-preview" src="" alt="Preview">
+                  <button type="button" class="img-preview-remove" id="btn-remove-prog-img">Ganti / Hapus ✕</button>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex;justify-content:flex-end;margin-top:14px">
+              <button type="submit" class="primary" id="btn-submit-prog" style="padding:10px 18px">
+                <i data-lucide="send" style="width:14px;height:14px"></i>
+                <span id="btn-submit-prog-text">🚀 Posting Progres ke Profil</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      `;
+    } else {
+      html += `
+        <div style="background:#f0fdf4;border:2px solid #16a34a;padding:12px 14px;box-shadow:3px 3px 0 var(--ink);margin-bottom:18px;display:flex;align-items:center;gap:10px">
+          <i data-lucide="eye" style="width:20px;height:20px;color:#16a34a;flex-shrink:0"></i>
+          <div style="font-size:12px;color:#14532d;line-height:1.4">
+            <b>Mode Peninjau:</b> Anda sedang melihat profil dan rekap perkembangan milik <b>${safeHTML(memberName)}</b>.
+            ${currentUser ? `Anda saat ini login sebagai <b>${safeHTML(currentUser)}</b>.` : `Silakan login jika ingin mengupdate progres Anda sendiri.`}
+          </div>
+        </div>
+      `;
+    }
+
+    // Member's Progress Gallery
+    html += `
+      <div style="margin-top:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <h3 style="font-size:16px;font-weight:900;letter-spacing:-0.5px">
+            📸 RIWAYAT PROGRES GAMBAR ${safeHTML(memberName.toUpperCase())} (${memberUpdates.length})
+          </h3>
+          <span style="font-size:11px;font-weight:800;color:#555">Klik gambar untuk zoom</span>
+        </div>
+    `;
+
+    if (memberUpdates.length === 0) {
+      html += `
+        <div class="empty">
+          <i data-lucide="image" style="width:32px;height:32px;color:#888;margin-bottom:6px"></i>
+          <div>${safeHTML(memberName)} belum mengunggah gambar progres.</div>
+          ${isOwnProfile ? '<div style="font-size:11.5px;color:#666;margin-top:4px">Gunakan form di atas untuk membagikan screenshot perkembangan tugas kamu!</div>' : ''}
+        </div>
+      `;
+    } else {
+      html += `<div class="progress-feed-grid">`;
+      memberUpdates.forEach(p => {
+        html += `
+          <article class="progress-post-card" data-post-id="${p.id}">
+            <div class="post-header">
+              <span class="post-task-badge" style="margin:0">${safeHTML(p.taskTitle || 'Jobdesk')}</span>
+              <span class="post-date">${safeHTML(p.dateStr || '')}</span>
+            </div>
+
+            ${p.imageData ? `
+              <div class="post-img-wrap" data-lightbox-src="${p.imageData}" data-title="${safeHTML(p.title)}" data-author="${safeHTML(p.author)}" data-date="${safeHTML(p.dateStr || '')}" data-notes="${safeHTML(p.notes || '')}">
+                <img src="${p.imageData}" alt="${safeHTML(p.title)}" loading="lazy">
+                <div class="post-img-overlay">
+                  <i data-lucide="maximize-2" style="width:16px;height:16px"></i>
+                  <span>KLIK PERBESAR</span>
+                </div>
+              </div>
+            ` : ''}
+
+            <div class="post-body">
+              <h4 class="post-title">${safeHTML(p.title)}</h4>
+              ${p.notes ? `<p class="post-notes">${safeHTML(p.notes)}</p>` : ''}
+            </div>
+
+            <div class="post-footer">
+              <span style="font-weight:800;color:#666">⚡ Outbreak 2D</span>
+              ${(currentUser === p.author || isReihan()) ? `
+                <button type="button" class="btn-post-del" data-del-prog="${p.id}">
+                  <i data-lucide="trash-2" style="width:11px;height:11px"></i> Hapus
+                </button>
+              ` : ''}
+            </div>
+          </article>
+        `;
+      });
+      html += `</div>`;
+    }
+
+    html += `</div>`;
+    container.innerHTML = html;
+
+    if (canPost) {
+      setupProgressUploadForm(memberName);
+    }
+
+    bindPostCardEvents(container);
+  }
+
+  function setupProgressUploadForm(memberName) {
+    const dropzone = $('prog-dropzone');
+    const fileInput = $('prog-file-input');
+    const previewWrap = $('prog-img-preview-wrap');
+    const removeBtn = $('btn-remove-prog-img');
+    const form = $('form-progress-upload');
+
+    if (!form || !dropzone || !fileInput) return;
+
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        await stageProgressImage(e.dataTransfer.files[0]);
+      }
+    });
+
+    fileInput.addEventListener('change', async () => {
+      if (fileInput.files && fileInput.files[0]) {
+        await stageProgressImage(fileInput.files[0]);
+      }
+    });
+
+    if (removeBtn) {
+      removeBtn.addEventListener('click', () => {
+        stagedProgressImg = null;
+        fileInput.value = '';
+        if (previewWrap) previewWrap.style.display = 'none';
+        if (dropzone) dropzone.style.display = 'block';
+      });
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!stagedProgressImg) {
+        alert('Mohon lampirkan gambar/screenshot progres terlebih dahulu!');
+        return;
+      }
+
+      const taskSelect = $('prog-task-select');
+      const taskId = Number(taskSelect.value);
+      const taskOpt = taskSelect.options[taskSelect.selectedIndex];
+      const taskTitle = taskOpt ? taskOpt.dataset.title || taskOpt.textContent : 'Jobdesk';
+      const title = $('prog-title').value.trim();
+      const notes = $('prog-notes').value.trim();
+
+      const submitBtn = $('btn-submit-prog');
+      const submitText = $('btn-submit-prog-text');
+      if (submitBtn) submitBtn.disabled = true;
+      if (submitText) submitText.textContent = 'Mengompres & Menyimpan ke Cloud... ⏳';
+
+      const updateObj = {
+        author: memberName,
+        taskId: taskId,
+        taskTitle: taskTitle,
+        title: title,
+        notes: notes,
+        imageData: stagedProgressImg
+      };
+
+      const res = await API.addProgressUpdate(updateObj);
+      if (res && res.success) {
+        stagedProgressImg = null;
+        await loadProgressUpdates();
+        renderProfileContent();
+        showToast('Progres harian berhasil diupload & tersinkronisasi! 🚀');
+      } else {
+        alert('Gagal mengupload progres: ' + (res.error || 'Koneksi error'));
+      }
+
+      if (submitBtn) submitBtn.disabled = false;
+      if (submitText) submitText.textContent = '🚀 Posting Progres ke Profil';
+    });
+  }
+
+  async function stageProgressImage(file) {
+    if (!file || !file.type.startsWith('image/')) {
+      alert('File harus berupa gambar (PNG, JPG, WebP)!');
+      return;
+    }
+    try {
+      const dataUrl = await compressImage(file, 1000, 1000, 0.72);
+      stagedProgressImg = dataUrl;
+      const previewWrap = $('prog-img-preview-wrap');
+      const previewImg = $('prog-img-preview');
+      const dropzone = $('prog-dropzone');
+      if (previewImg) previewImg.src = dataUrl;
+      if (previewWrap) previewWrap.style.display = 'block';
+      if (dropzone) dropzone.style.display = 'none';
+      showToast('Gambar screenshot siap diposting! 📸');
+    } catch (err) {
+      alert('Gagal memproses gambar: ' + err.message);
+    }
+  }
+
+  function bindPostCardEvents(container) {
+    container.querySelectorAll('[data-lightbox-src]').forEach(wrap => {
+      wrap.addEventListener('click', () => {
+        openLightbox(
+          wrap.dataset.lightboxSrc,
+          wrap.dataset.title,
+          wrap.dataset.author,
+          wrap.dataset.date,
+          wrap.dataset.notes
+        );
+      });
+    });
+
+    container.querySelectorAll('[data-del-prog]').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.delProg;
+        if (!confirm('Yakin ingin menghapus postingan progres ini?')) return;
+        const res = await API.deleteProgressUpdate(id);
+        if (res && res.success) {
+          await loadProgressUpdates();
+          renderProfileContent();
+          showToast('Postingan progres telah dihapus.');
+        } else {
+          alert('Gagal menghapus progres!');
+        }
+      });
+    });
+  }
+
+  function openLightbox(imgSrc, title, author, date, notes) {
+    const wrap = $('modal-lightbox-wrap');
+    if (!wrap) return;
+    $('lightbox-img').src = imgSrc;
+    $('lightbox-title').textContent = title || 'Preview Progres';
+    $('lightbox-meta').textContent = `Oleh ${author || 'Anggota Tim'} • ${date || ''}`;
+    $('lightbox-notes').textContent = notes || '';
+    wrap.classList.add('show');
+  }
+
+  function closeLightbox() {
+    const wrap = $('modal-lightbox-wrap');
+    if (wrap) wrap.classList.remove('show');
+  }
+
+  // ----------------------------------------------------
   // EVENT LISTENERS
   // ----------------------------------------------------
   function setupEventListeners() {
@@ -691,7 +1312,11 @@
     $('btn-open-login').addEventListener('click', () => openLoginModal());
     document.querySelectorAll('.member-pill[data-user]').forEach(pill => {
       pill.addEventListener('click', () => {
-        openLoginModal(pill.dataset.user);
+        if (currentUser) {
+          openProfileModal(pill.dataset.user);
+        } else {
+          openLoginModal(pill.dataset.user);
+        }
       });
     });
 
@@ -750,6 +1375,68 @@
       });
       render();
       showToast(`Menampilkan tugas milik ${currentUser} ⭐`);
+    });
+
+    // Profile & Team Feed Navigation
+    const myProfileBtn = $('btn-open-my-profile');
+    if (myProfileBtn) {
+      myProfileBtn.addEventListener('click', () => {
+        openProfileModal(currentUser || 'feed');
+      });
+    }
+
+    const teamFeedBtn = $('btn-open-team-feed');
+    if (teamFeedBtn) {
+      teamFeedBtn.addEventListener('click', () => {
+        openProfileModal('feed');
+      });
+    }
+
+    const closeProfileBtn = $('btn-close-profile');
+    if (closeProfileBtn) {
+      closeProfileBtn.addEventListener('click', closeProfileModal);
+    }
+
+    const closeLightboxBtn = $('btn-close-lightbox');
+    if (closeLightboxBtn) {
+      closeLightboxBtn.addEventListener('click', closeLightbox);
+    }
+
+    const lightboxWrap = $('modal-lightbox-wrap');
+    if (lightboxWrap) {
+      lightboxWrap.addEventListener('click', (e) => {
+        if (e.target === lightboxWrap) closeLightbox();
+      });
+    }
+
+    const profileTabs = $('profile-tabs-bar');
+    if (profileTabs) {
+      profileTabs.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-tab]');
+        if (!btn) return;
+        currentProfileTab = btn.dataset.tab;
+        document.querySelectorAll('#profile-tabs-bar .profile-tab').forEach(b => {
+          b.classList.toggle('active', b === btn);
+        });
+        renderProfileContent();
+      });
+    }
+
+    // Ctrl+V Paste handler for screenshot image upload into profile
+    document.addEventListener('paste', async (e) => {
+      const modal = $('modal-profile-wrap');
+      if (!modal || !modal.classList.contains('show')) return;
+      if (e.clipboardData && e.clipboardData.items) {
+        for (let item of e.clipboardData.items) {
+          if (item.type && item.type.indexOf('image') !== -1) {
+            const file = item.getAsFile();
+            if (file) {
+              await stageProgressImage(file);
+              break;
+            }
+          }
+        }
+      }
     });
 
     // Submissions

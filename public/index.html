@@ -58,7 +58,11 @@
           </div>
         </div>
         <div class="user-profile-actions">
-          <button class="member-pill special" id="btn-my-tasks">
+          <button class="member-pill special" id="btn-open-my-profile" title="Buka profil dan posting progres harian kamu">
+            <i data-lucide="user" style="width:12px;height:12px"></i>
+            <span>Profil Saya</span>
+          </button>
+          <button class="member-pill" id="btn-my-tasks">
             <i data-lucide="star" style="width:12px;height:12px"></i>
             <span>Tugas Saya</span>
           </button>
@@ -77,6 +81,11 @@
       <i data-lucide="pin" style="width:14px;height:14px"></i>
       PUSAT ACUAN PROJEK:
     </span>
+    <button class="link-badge feed" id="btn-open-team-feed" style="background:#fff;border-color:var(--ink)">
+      <i data-lucide="image" style="width:14px;height:14px;color:var(--orange)"></i>
+      <span>📸 Feed Progres Tim</span>
+      <span class="feed-count-badge" id="feed-count-badge">0</span>
+    </button>
     <a href="https://www.figma.com/design/3z6xuNL6snILkeac92TvGJ/Untitled?node-id=0-1&t=1fbwPhcLpaRk8gBK-1" target="_blank" rel="noopener noreferrer" class="link-badge figma">
       <i data-lucide="palette" style="width:14px;height:14px"></i>
       <span>Buka Figma Desain Outbreak ↗</span>
@@ -530,6 +539,68 @@
         <span>UJI KONEKSI SEKARANG</span>
       </button>
       <button type="button" class="primary" id="btn-close-sync">TUTUP</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL: PROFIL ANGGOTA & FEED PROGRES TIM   -->
+<!-- ========================================== -->
+<div class="modalback" id="modal-profile-wrap">
+  <div class="modal modal-large" style="width:min(800px, 98%);max-height:94vh;display:flex;flex-direction:column;padding:0;overflow:hidden">
+    <!-- Header -->
+    <div style="background:var(--ink);color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid var(--ink);flex-shrink:0">
+      <div>
+        <div class="eyebrow" style="color:var(--yellow);font-size:10px;margin-bottom:2px">MEMBER PROFILE &amp; DAILY PROGRESS LOG</div>
+        <h2 style="color:#fff;margin:0;font-size:20px;letter-spacing:-0.5px" id="profile-modal-title">PROFIL &amp; LOG PROGRES HARIAN</h2>
+      </div>
+      <button type="button" id="btn-close-profile" style="background:var(--orange);border:2px solid var(--ink);color:#fff;width:34px;height:34px;font-weight:900;font-size:16px;cursor:pointer;display:grid;place-items:center;box-shadow:2px 2px 0 var(--ink)">✕</button>
+    </div>
+
+    <!-- Member Filter Tabs -->
+    <div class="profile-tabs-bar" id="profile-tabs-bar" style="background:var(--yellow);border-bottom:2.5px solid var(--ink);padding:8px 12px;display:flex;gap:6px;overflow-x:auto;align-items:center;flex-shrink:0">
+      <button type="button" class="profile-tab active" data-tab="feed">
+        <i data-lucide="globe" style="width:13px;height:13px"></i>
+        <span>🌐 Semua Feed Tim</span>
+      </button>
+      <button type="button" class="profile-tab" data-tab="Reihan">
+        <i data-lucide="laptop" style="width:13px;height:13px"></i>
+        <span>Reihan</span>
+      </button>
+      <button type="button" class="profile-tab" data-tab="Bintang">
+        <i data-lucide="palette" style="width:13px;height:13px"></i>
+        <span>Bintang</span>
+      </button>
+      <button type="button" class="profile-tab" data-tab="Royan">
+        <i data-lucide="shield" style="width:13px;height:13px"></i>
+        <span>Royan</span>
+      </button>
+      <button type="button" class="profile-tab" data-tab="Eby">
+        <i data-lucide="skull" style="width:13px;height:13px"></i>
+        <span>Eby</span>
+      </button>
+    </div>
+
+    <!-- Scrollable Content Body -->
+    <div style="overflow-y:auto;padding:18px;flex:1;background:var(--paper)" id="profile-modal-body">
+      <!-- Dynamic Content Rendered by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL: LIGHTBOX / ZOOM GAMBAR PROGRES      -->
+<!-- ========================================== -->
+<div class="modalback" id="modal-lightbox-wrap" style="z-index:99999">
+  <div style="position:relative;max-width:min(920px, 94vw);max-height:92vh;display:flex;flex-direction:column;align-items:center">
+    <button type="button" id="btn-close-lightbox" style="position:absolute;top:-12px;right:-12px;background:var(--orange);color:#fff;border:2.5px solid var(--ink);width:34px;height:34px;font-size:16px;font-weight:900;display:grid;place-items:center;cursor:pointer;box-shadow:3px 3px 0 var(--ink);z-index:10">✕</button>
+    <div style="background:#fff;border:3px solid var(--ink);box-shadow:6px 6px 0 var(--ink);padding:10px;width:100%;text-align:center">
+      <img id="lightbox-img" src="" alt="Preview Progres" style="max-width:100%;max-height:70vh;object-fit:contain;border:2px solid var(--ink);background:#111;display:block;margin:auto">
+      <div style="padding:10px 6px 4px;text-align:left">
+        <div style="font-size:14px;font-weight:900" id="lightbox-title">Judul Progres</div>
+        <div style="font-size:11.5px;color:#555;margin-top:2px" id="lightbox-meta">Oleh Eby • 15 Okt 2026</div>
+        <div style="font-size:12px;margin-top:6px;line-height:1.4" id="lightbox-notes"></div>
+      </div>
     </div>
   </div>
 </div>

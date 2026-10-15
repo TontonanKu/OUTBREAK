@@ -1104,6 +1104,366 @@ h1 span {
   background: #fff;
 }
 
+/* ====================================================
+   9. MEMBER PROFILE & DAILY PROGRESS FEED (NEO-BRUTALIST)
+   ==================================================== */
+.feed-count-badge {
+  background: var(--orange);
+  color: #fff;
+  border: 1px solid var(--ink);
+  font-size: 10px;
+  font-weight: 900;
+  padding: 1px 6px;
+  border-radius: 999px;
+  margin-left: 4px;
+}
+
+.profile-tabs-bar {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.profile-tab {
+  background: #fff;
+  border: 2px solid var(--ink);
+  padding: 6px 12px;
+  font-size: 11.5px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 2.5px 2.5px 0 var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition: all 0.1s ease;
+}
+
+.profile-tab:hover {
+  background: var(--yellow);
+  transform: translate(-1px, -1px);
+}
+
+.profile-tab.active {
+  background: var(--ink);
+  color: #fff;
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+
+.profile-tab.active i {
+  color: var(--yellow);
+}
+
+.profile-hero-card {
+  background: #fff;
+  border: 3px solid var(--ink);
+  box-shadow: 4px 4px 0 var(--ink);
+  padding: 16px;
+  margin-bottom: 16px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.profile-avatar-lg {
+  width: 64px;
+  height: 64px;
+  border: 3px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  display: grid;
+  place-items: center;
+  font-size: 28px;
+  font-weight: 900;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.profile-meta-wrap {
+  flex: 1;
+}
+
+.profile-name-title {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.profile-role-pill {
+  font-size: 11px;
+  font-weight: 900;
+  background: var(--yellow);
+  border: 1.5px solid var(--ink);
+  padding: 2px 8px;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+.profile-tagline {
+  font-size: 11.5px;
+  color: #555;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.profile-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.profile-mini-stat {
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  padding: 6px 8px;
+  text-align: center;
+}
+
+.profile-mini-stat .val {
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.profile-mini-stat .lbl {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #666;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* Post New Progress Box */
+.progress-upload-box {
+  background: #fff;
+  border: 2.5px solid var(--ink);
+  box-shadow: 4px 4px 0 var(--ink);
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.progress-upload-box h3 {
+  font-size: 14.5px;
+  font-weight: 900;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink);
+}
+
+.img-dropzone {
+  border: 2.5px dashed var(--ink);
+  background: var(--paper);
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  position: relative;
+}
+
+.img-dropzone:hover, .img-dropzone.dragover {
+  background: #fef08a;
+  border-color: var(--orange);
+  border-style: solid;
+}
+
+.img-preview-container {
+  position: relative;
+  border: 2px solid var(--ink);
+  background: #111;
+  max-height: 240px;
+  overflow: hidden;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.img-preview-container img {
+  max-width: 100%;
+  max-height: 240px;
+  object-fit: contain;
+}
+
+.img-preview-remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: var(--orange);
+  color: #fff;
+  border: 1.5px solid var(--ink);
+  font-size: 11px;
+  font-weight: 900;
+  padding: 3px 8px;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+/* Progress Feed Cards Grid */
+.progress-feed-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.progress-post-card {
+  background: #fff;
+  border: 2.5px solid var(--ink);
+  box-shadow: 3.5px 3.5px 0 var(--ink);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: transform 0.1s ease;
+}
+
+.progress-post-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 4.5px 4.5px 0 var(--ink);
+}
+
+.post-header {
+  padding: 10px 12px;
+  border-bottom: 2px solid var(--ink);
+  background: var(--paper);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.post-author-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.post-author-avatar {
+  width: 26px;
+  height: 26px;
+  border: 1.5px solid var(--ink);
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  font-size: 13px;
+  color: #fff;
+}
+
+.post-author-name {
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.post-date {
+  font-size: 10px;
+  color: #666;
+  font-weight: 700;
+}
+
+.post-img-wrap {
+  position: relative;
+  background: #111;
+  border-bottom: 2px solid var(--ink);
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.post-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.2s ease;
+}
+
+.post-img-wrap:hover img {
+  transform: scale(1.04);
+}
+
+.post-img-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 900;
+  gap: 4px;
+}
+
+.post-img-wrap:hover .post-img-overlay {
+  opacity: 1;
+}
+
+.post-body {
+  padding: 12px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.post-task-badge {
+  display: inline-block;
+  background: var(--yellow);
+  border: 1.5px solid var(--ink);
+  font-size: 10px;
+  font-weight: 900;
+  padding: 2px 6px;
+  margin-bottom: 6px;
+  align-self: flex-start;
+}
+
+.post-title {
+  font-size: 13px;
+  font-weight: 900;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+.post-notes {
+  font-size: 11.5px;
+  color: #444;
+  line-height: 1.45;
+  margin-top: 4px;
+}
+
+.post-footer {
+  padding: 8px 12px;
+  border-top: 1.5px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10.5px;
+}
+
+.btn-post-del {
+  background: #fff;
+  border: 1.5px solid #dc2626;
+  color: #dc2626;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.btn-post-del:hover {
+  background: #dc2626;
+  color: #fff;
+}
+
 /* Responsive */
 @media (max-width: 960px) {
   .top {
@@ -1257,6 +1617,12 @@ h1 span {
   .filter-bar { flex-direction: column; align-items: stretch; }
   .filters { width: 100%; justify-content: flex-start; overflow-x: auto; padding-bottom: 4px; }
   .search-box { width: 100%; }
+
+  /* Profile & Feed Mobile */
+  .progress-feed-grid { grid-template-columns: 1fr; }
+  .profile-hero-card { flex-direction: column; text-align: center; gap: 10px; }
+  .profile-name-title { justify-content: center; }
+  .profile-stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 380px) {
