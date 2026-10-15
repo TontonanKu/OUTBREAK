@@ -1036,6 +1036,11 @@
     if (detailSubmitBtn) {
       detailSubmitBtn.addEventListener('click', () => {
         closeTaskDetailModal();
+        if (!currentUser) {
+          alert('Akses Dibatasi: Silakan login terlebih dahulu sebagai member untuk mengumpulkan hasil tugas!');
+          openLoginModal(task.owner || '');
+          return;
+        }
         openSubmitModal(task.id);
       });
     }
@@ -1073,14 +1078,28 @@
   }
 
   function openSubmitModal(taskId = null) {
+    if (!currentUser) {
+      alert('Akses Dibatasi: Silakan login terlebih dahulu sebagai member untuk mengumpulkan hasil tugas!');
+      const task = taskId ? tasks.find(t => t.id === Number(taskId)) : null;
+      openLoginModal(task ? task.owner || '' : '');
+      return;
+    }
+
     const task = taskId ? tasks.find(t => t.id === Number(taskId)) : null;
 
     if (currentUser) {
-      $('sub-owner').value = currentUser;
-    } else if (task && task.owner) {
-      $('sub-owner').value = task.owner;
+      $('sub-owner').value = isReihan() && task && task.owner ? task.owner : currentUser;
+      if (!isReihan()) {
+        $('sub-owner').style.pointerEvents = 'none';
+        $('sub-owner').style.background = '#f3f4f6';
+      } else {
+        $('sub-owner').style.pointerEvents = 'auto';
+        $('sub-owner').style.background = '#fff';
+      }
     } else {
       $('sub-owner').value = '';
+      $('sub-owner').style.pointerEvents = 'auto';
+      $('sub-owner').style.background = '#fff';
     }
 
     populateTaskSelect(task ? task.id : null, $('sub-owner').value);
@@ -1739,6 +1758,11 @@
         if (!task) return;
 
         if (act === 'submit-task') {
+          if (!currentUser) {
+            alert('Akses Dibatasi: Silakan login terlebih dahulu sebagai member untuk mengumpulkan hasil tugas!');
+            openLoginModal(memberName);
+            return;
+          }
           openSubmitModal(taskId);
           return;
         }
@@ -2065,7 +2089,14 @@
     });
 
     // Submissions
-    $('btn-main-submit').addEventListener('click', () => openSubmitModal());
+    $('btn-main-submit').addEventListener('click', () => {
+      if (!currentUser) {
+        alert('Akses Dibatasi: Silakan login terlebih dahulu sebagai member untuk mengumpulkan hasil tugas!');
+        openLoginModal();
+        return;
+      }
+      openSubmitModal();
+    });
     $('btn-cancel-submit').addEventListener('click', closeSubmitModal);
     $('btn-cancel-login').addEventListener('click', closeLoginModal);
     $('btn-cancel-task').addEventListener('click', closeTaskEditor);
@@ -2109,7 +2140,14 @@
     // Submit Form
     $('form-submit').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const owner = $('sub-owner').value;
+      if (!currentUser) {
+        alert('Akses Dibatasi: Silakan login terlebih dahulu sebagai member untuk mengumpulkan hasil tugas!');
+        closeSubmitModal();
+        openLoginModal();
+        return;
+      }
+
+      const owner = isReihan() ? ($('sub-owner').value || currentUser) : currentUser;
       const taskId = Number($('sub-task-select').value);
       const link = $('sub-link').value.trim();
       const notes = $('sub-notes').value.trim();
@@ -2360,6 +2398,11 @@
         }
 
         if (act === 'submit-task') {
+          if (!currentUser) {
+            alert('Akses Dibatasi: Silakan login terlebih dahulu sebagai member untuk mengumpulkan hasil tugas!');
+            openLoginModal(task.owner || '');
+            return;
+          }
           openSubmitModal(taskId);
           return;
         }

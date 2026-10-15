@@ -182,11 +182,19 @@ app.post('/api/tasks/:id/submit', upload.single('file'), (req, res) => {
   const id = Number(req.params.id);
   const { owner, link, notes, status } = req.body;
 
+  const validMembers = ['reihan', 'bintang', 'royan', 'eby'];
+  if (!owner || !validMembers.includes(owner.toLowerCase())) {
+    return res.status(403).json({ 
+      success: false, 
+      message: 'Akses Dibatasi: Hanya member tim Outbreak (Reihan, Bintang, Royan, Eby) yang berwenang mengumpulkan hasil tugas!' 
+    });
+  }
+
   const tasks = readTasks();
   const task = tasks.find(t => t.id === id);
   if (!task) return res.status(404).json({ success: false, message: 'Tugas tidak ditemukan.' });
 
-  if (owner) task.owner = owner;
+  task.owner = owner;
   if (link !== undefined) task.submissionLink = link.trim();
   if (notes !== undefined) task.notes = notes.trim();
   task.status = status || 'done';

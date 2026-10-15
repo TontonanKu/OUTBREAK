@@ -123,10 +123,19 @@ const API = {
   },
 
   async submitWork(taskId, formDataOrObj) {
+    const currentUser = localStorage.getItem('rrby_outbreak_current_user');
+    const validMembers = ['reihan', 'bintang', 'royan', 'eby'];
+    if (!currentUser || !validMembers.includes(currentUser.toLowerCase())) {
+      return { 
+        success: false, 
+        message: 'Akses Dibatasi: Silakan login terlebih dahulu sebagai member tim Outbreak untuk mengumpulkan hasil tugas!' 
+      };
+    }
+
     let tasks = await this.getTasks();
-    if (!tasks) return { success: false };
+    if (!tasks) return { success: false, message: 'Data tugas tidak ditemukan.' };
     const task = tasks.find(t => t.id === taskId);
-    if (!task) return { success: false };
+    if (!task) return { success: false, message: 'Tugas tidak ditemukan.' };
 
     let owner = '', link = '', notes = '', status = 'done', fileMeta = null;
     if (formDataOrObj instanceof FormData) {
