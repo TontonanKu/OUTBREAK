@@ -278,6 +278,15 @@ const API = {
       });
     }
 
+    // Immediately cache locally so user sees update instantly
+    try {
+      const local = localStorage.getItem('rrby_outbreak_progress_updates');
+      let cached = local ? JSON.parse(local) : [];
+      if (!Array.isArray(cached)) cached = [];
+      cached.unshift(updateObj);
+      localStorage.setItem('rrby_outbreak_progress_updates', JSON.stringify(cached));
+    } catch (e) {}
+
     try {
       const res = await fetch(`${FIREBASE_DB_URL}/progress_updates/${updateObj.id}.json`, {
         method: 'PUT',
@@ -286,8 +295,8 @@ const API = {
       });
       return { success: res.ok, update: updateObj };
     } catch (e) {
-      console.error('Failed to post progress update to Firebase', e);
-      return { success: false, error: e.message };
+      console.warn('Firebase network error, saved to local cache', e);
+      return { success: true, update: updateObj, offline: true };
     }
   },
 

@@ -1329,38 +1329,46 @@
       }
 
       const taskSelect = $('prog-task-select');
-      const taskId = Number(taskSelect.value);
-      const taskOpt = taskSelect.options[taskSelect.selectedIndex];
+      const taskId = taskSelect ? Number(taskSelect.value) : 0;
+      const taskOpt = taskSelect ? taskSelect.options[taskSelect.selectedIndex] : null;
       const taskTitle = taskOpt ? taskOpt.dataset.title || taskOpt.textContent : 'Jobdesk';
-      const title = $('prog-title').value.trim();
-      const notes = $('prog-notes').value.trim();
+      const titleEl = $('prog-title');
+      const title = titleEl ? titleEl.value.trim() : 'Preview Progres';
+      const notesEl = $('prog-notes');
+      const notes = notesEl ? notesEl.value.trim() : '';
 
       const submitBtn = $('btn-submit-prog');
       const submitText = $('btn-submit-prog-text');
       if (submitBtn) submitBtn.disabled = true;
-      if (submitText) submitText.textContent = 'Mengompres & Menyimpan ke Cloud... ⏳';
+      if (submitText) submitText.textContent = 'Menyimpan ke Cloud... ⏳';
 
       const updateObj = {
         author: memberName,
         taskId: taskId,
         taskTitle: taskTitle,
         title: title,
-        notes: notes,
+        notes: notes || title,
         imageData: stagedProgressImg
       };
 
-      const res = await API.addProgressUpdate(updateObj);
-      if (res && res.success) {
-        stagedProgressImg = null;
-        await loadProgressUpdates();
-        renderMemberProfile(activeProfileMember);
-        showToast('Progres harian berhasil diupload & tersinkronisasi! 🚀');
-      } else {
-        alert('Gagal mengupload progres: ' + (res.error || 'Koneksi error'));
+      try {
+        const res = await API.addProgressUpdate(updateObj);
+        if (res && res.success) {
+          stagedProgressImg = null;
+          await loadProgressUpdates();
+          renderMemberProfile(activeProfileMember);
+          showToast('Progres harian berhasil dibagikan & tersimpan! 🚀');
+        } else {
+          alert('Gagal mengupload progres: ' + (res.error || 'Koneksi error'));
+          if (submitBtn) submitBtn.disabled = false;
+          if (submitText) submitText.textContent = '🚀 Bagikan Preview Progres Hari Ini';
+        }
+      } catch (err) {
+        console.error('Submit error', err);
+        alert('Terjadi kesalahan saat memproses progres: ' + err.message);
+        if (submitBtn) submitBtn.disabled = false;
+        if (submitText) submitText.textContent = '🚀 Bagikan Preview Progres Hari Ini';
       }
-
-      if (submitBtn) submitBtn.disabled = false;
-      if (submitText) submitText.textContent = '🚀 Posting Progres ke Profil';
     });
   }
 
