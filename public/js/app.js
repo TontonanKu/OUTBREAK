@@ -120,6 +120,173 @@
     }
   ];
 
+  // Penjelasan Rinci & Panduan Teknis Jobdesk (Revisi Outbreak Tim RRBY)
+  const TASK_EXPLANATIONS = {
+    1: {
+      goal: "Merombak dan merapikan seluruh struktur wireframe & UI High-Fidelity di Figma sesuai arahan revisi asistensi dosen, memastikan layout proporsional pada resolusi 1920x1080 (16:9), typography konsisten (Inter-Black), dan teks berbahasa Inggris.",
+      steps: [
+        "Review menyeluruh terhadap semua frame, canvas, dan component layer di Figma Game Outbreak.",
+        "Buat Layer Daily Reward: Desain kalender pop-up login 7 hari (Hari 1-6 berhadiah +100 Cash / Senjata starter, Hari 7 reward karakter eksklusif).",
+        "Buat Layer Cash / Shop: UI terstruktur untuk pembelian dan topup in-game cash serta konfirmasi transaksi.",
+        "Rapikan Layer Heroes & Guns: Tata ulang grid katalog pemilihan 3 hero dan 5 senjata dengan layout kartu yang bersih dan modern.",
+        "Vektor Senjata: Tentukan identitas visual dan aksen warna untuk 5 tipe senjata (Revolver, SMG, Shotgun, Assault Rifle, Sniper).",
+        "Ekspor aset icon & slicing UI dalam format PNG transparan untuk siap diintegrasikan Reihan ke Unity Canvas."
+      ],
+      specs: [
+        { label: "Target Canvas", value: "1920 x 1080 px (16:9 Aspect Ratio)" },
+        { label: "Tipografi", value: "Inter (Weights: Bold, Extra-Bold, Black)" },
+        { label: "Bahasa UI", value: "Full English (Play, Inventory, Daily Reward, Settings)" },
+        { label: "Color Palette", value: "Neo-Brutalist Dark (#0b0c10, #ff4b0b, #ffcf05, #10b981)" }
+      ],
+      tips: "Catatan Dosen: Perhatikan safe zone HUD in-game agar tombol pause, HP bar, dan ammo count tidak menutupi visibilitas gameplay saat wave zombie padat."
+    },
+    2: {
+      goal: "Memproduksi dan menggantikan seluruh placeholder SFX kode dengan audio efek orisinal/bebas lisensi berkualitas tinggi, crisp, jernih, dan selaras dengan nuansa horor-survival aksi Outbreak.",
+      steps: [
+        "Produksi SFX Antarmuka (UI): Sound klik tombol, popup modal, beli item di toko, klaim reward harian, dan notifikasi misi.",
+        "Produksi SFX Senjata: Audio tembakan unik untuk 5 jenis senjata (Revolver: punchy, SMG: rapid firing, Shotgun: blast berat, AR: rentetan mantap, Sniper: dentuman gema) serta suara reload tiap senjata.",
+        "Produksi SFX Gameplay & Pickups: Suara ambil medkit/health pack, pickup cash, empty magazine click, victory fanfare, dan defeat/game over.",
+        "Produksi BGM: Musik tema menu utama yang mencekam, musik gameplay ambient survival, dan musik tegang bertempo tinggi untuk misi puncak.",
+        "Kolaborasi dengan Royan untuk pengolahan voice hero hurt/death dan suara monster zombie.",
+        "Normalisasi audio: Export WAV/OGG dengan master gain terkalibrasi (SFX peak di 0.95, BGM di 0.75)."
+      ],
+      specs: [
+        { label: "Format Master", value: "WAV (24-bit, 44.1 kHz) & OGG Vorbis" },
+        { label: "Lisensi", value: "Royalty-Free Commercial / CC0 (Wajib Bebas Hak Cipta)" },
+        { label: "Target Gain", value: "Master SFX: 0.95 | BGM: 0.75" },
+        { label: "Durasi SFX UI", value: "0.15s – 0.5s (Reaktif tanpa jeda hening)" }
+      ],
+      tips: "Hindari audio dengan noise desis di background. Uji hasil dengar pada speaker laptop dan headphone untuk memastikan bass tidak pecah (no clipping)."
+    },
+    3: {
+      goal: "Menyediakan 3 hero playable (Alek, Erika, Hank) dengan sprite sheet bersih tanpa noda/pixel noise, memiliki 6 state animasi lengkap dengan style proporsi seragam.",
+      steps: [
+        "Pembersihan Alek: Bersihkan artefak noda/pixel kotor pada sprite Alek karakter pertama.",
+        "Desain Erika: Karakter perempuan survivalist lincah dengan perlengkapan taktis.",
+        "Desain Hank: Karakter pria kekar berotot dengan rompi pelindung spesialis senjata berat.",
+        "Gambar 6 State Animasi untuk tiap hero: Idle, Walk, Run, Attack/Shoot, Hurt, dan Dead.",
+        "Standarisasi proporsi dan palet warna agar selaras dengan style art di Figma.",
+        "Ekspor sprite sequence frame PNG transparan dengan pivot point konsisten di telapak kaki (Bottom-Center)."
+      ],
+      specs: [
+        { label: "Format", value: "PNG 32-bit RGBA Transparan" },
+        { label: "Jumlah Hero", value: "3 Karakter (Alek, Erika, Hank)" },
+        { label: "State Animasi", value: "6 State per hero (Total 18 set animasi)" },
+        { label: "Pivot Point", value: "Bottom-Center (Telapak Kaki)" }
+      ],
+      tips: "Pastikan tinggi badan Erika, Alek, dan Hank proporsional saat disejajarkan agar tidak terlihat aneh saat di-render berdampingan di Unity."
+    },
+    4: {
+      goal: "Menggambar 4 background arena gameplay baru untuk melengkapi 5 level misi berjenjang (Easy s/d Nightmare) dengan kesinambungan tema apokaliptik perkotaan.",
+      steps: [
+        "Analisis background pertama di Figma (Misi 1: Easy - Area Perkotaan Reruntuhan) sebagai acuan tone dan lighting.",
+        "Gambar Background Misi 2 (Medium): Area Pinggiran Kota / Pom Bensin Terbengkalai.",
+        "Gambar Background Misi 3 (Hard): Area Rumah Sakit / Laboratorium Karantina Terinfeksi.",
+        "Gambar Background Misi 4 (Insane): Terowongan Kereta Bawah Tanah Gelap & Berasap.",
+        "Gambar Background Misi 5 (Nightmare): Episentrum Wabah / Fasilitas Militer Rusak Total.",
+        "Pisahkan elemen layer latar jika diperlukan efek 2D parallax di Unity."
+      ],
+      specs: [
+        { label: "Resolusi Wajib", value: "1920 x 1080 px (16:9 Aspect Ratio)" },
+        { label: "Format", value: "PNG Tanpa Kompresi Rusak (sRGB)" },
+        { label: "Jumlah Area", value: "5 Level Misi Berjenjang" },
+        { label: "Kontras Visual", value: "Dark Atmospheric (Hero & Zombie tetap terbaca jelas)" }
+      ],
+      tips: "Jangan menggambar objek terlalu terang di bagian tengah arena bermain agar karakter pemain dan gerombolan zombie tidak tersamarkan."
+    },
+    5: {
+      goal: "Merekam dan mengolah sulih suara ekspresif untuk 3 karakter hero dan kawanan monster zombie guna menghadirkan atmosfer survival yang imersif dan menegangkan.",
+      steps: [
+        "Rekaman Hero Voice Hurt: Buat variasi rintihan kena serang untuk Alek, Erika, dan Hank.",
+        "Rekaman Hero Voice Dead: Suara jeritan terakhir saat gugur yang berbeda karakter tiap hero.",
+        "Rekaman Zombie Voice: Erangan idle/patroli, jeritan buas mendeteksi pemain, suara cakar/gigit, dan rintihan roboh.",
+        "Sound Processing Zombie Khusus: Gunakan pitch shifter & distortion reverb untuk suara Tank Zombie dan Boss Nightmare agar berbobot berat dan mengerikan.",
+        "Pembersihan sinyal rekaman: Lakukan noise gate & reduction untuk menghilangkan desah nafas dan ambient kamar.",
+        "Ekspor file WAV/OGG siap pakai dan bagikan ke Reihan & Bintang."
+      ],
+      specs: [
+        { label: "Format", value: "WAV 24-bit / 44.1 kHz & OGG Vorbis" },
+        { label: "Peak Level", value: "-2.0 dB (Maksimal, bebas clipping)" },
+        { label: "Variasi Take", value: "Minimal 2-3 take per state (Mencegah kebosanan)" },
+        { label: "Karakter Suara", value: "3 Hero Unik + Geraman Buas Kawanan Zombie" }
+      ],
+      tips: "Lakukan take di ruangan hening berkarpet/kasur untuk meredam pantulan gema (flutter echo). Koordinasikan dengan Bintang untuk penyelarasan tone."
+    },
+    6: {
+      goal: "Mengembangkan 6 varian zombie lengkap (1 zombie acuan + 5 varian baru) dengan animasi lengkap 6 state per varian, sesuai pedoman visual zombie pertama di Figma.",
+      steps: [
+        "Review zombie pertama di Figma sebagai acuan bentuk dasar dan siluet visual (Normal Walker).",
+        "Desain Varian 2 & 3: Zombie Sipil Terinfeksi & Zombie Ramping Merayap.",
+        "Desain Varian 4 (Fast Runner): Zombie kurus dengan postur condong ke depan, agresif dan sangat cepat.",
+        "Desain Varian 5 (Tank Zombie): Monster kekar berotot mutasi masif dengan pertahanan tebal.",
+        "Desain Varian 6 (Boss Nightmare): Mutasi puncak dengan siluet menakutkan dan senjata organik.",
+        "Gambar 6 State Animasi untuk seluruh 6 varian: Idle, Walk, Run, Attack, Hurt, Dead.",
+        "Ekspor ke format PNG transparan dengan resolusi grid dan pivot seragam."
+      ],
+      specs: [
+        { label: "Format", value: "PNG 32-bit RGBA Transparan" },
+        { label: "Total Varian", value: "6 Varian Zombie Lengkap" },
+        { label: "State Animasi", value: "6 State per varian (Total 36 set animasi)" },
+        { label: "Pivot Point", value: "Bottom-Center (Telapak Kaki)" }
+      ],
+      tips: "Pastikan siluet tiap varian langsung dapat dibedakan pemain hanya dalam sepersekian detik (misal Tank berpostur lebar, Runner condong ke depan)."
+    },
+    7: {
+      goal: "Menyatukan seluruh aset grafis tim (3 Hero, 6 Varian Zombie, 5 Background Misi, dan Icon UI) ke dalam project Unity 6 secara rapi, optimal, dan siap digerakkan.",
+      steps: [
+        "Strukturisasi Folder: Susun direktori `Assets/Sprites/` (`Heroes/`, `Zombies/`, `Environments/`, `UI/`).",
+        "Konfigurasi Import Texture: Set ke `Sprite (2D and UI)`, standarisasi Pixels Per Unit (PPU 100), filter mode, dan format kompresi.",
+        "Sprite Editor & Pivot: Slice sprite sheet dengan rapi dan tetapkan pivot konsisten di Bottom-Center untuk seluruh karakter.",
+        "Buat Sprite Atlas: Satukan sprite ke dalam Sprite Atlas Unity untuk meminimalkan draw call GPU.",
+        "Setup Animation Clip: Susun urutan frame untuk tiap state (Idle, Walk, Run, Attack, Hurt, Dead).",
+        "Rangkai Animator Controller: Konfigurasi Transition, Has Exit Time, Blend Tree, dan parameter trigger yang sinkron dengan Controller script."
+      ],
+      specs: [
+        { label: "Engine", value: "Unity 6 (6000.x) 2D URP" },
+        { label: "Pixels Per Unit", value: "100 PPU (Seragam seluruh sprite)" },
+        { label: "Optimasi", value: "Sprite Atlas Unity (Minimalisir Draw Calls)" },
+        { label: "Animator Controller", value: "Blend Trees & State Transitions" }
+      ],
+      tips: "Pastikan centang 'Generate Physics Shape' dicek agar polygon collider otomatis mengikuti bentuk sprite jika menggunakan 2D Collider."
+    },
+    8: {
+      goal: "Mengintegrasikan seluruh efek audio (SFX UI, tembakan senjata, reload, hurt, dead, zombie roar, dan BGM) ke dalam sistem AudioManager terpusat di Unity 6.",
+      steps: [
+        "Import audio ke `Assets/Audio/` (`SFX/`, `Voice/`, `BGM/`).",
+        "Setup Unity Audio Mixer: Buat hierarki grup Master -> BGM & SFX.",
+        "Implementasikan Object Pool untuk AudioSource agar tembakan senjata otomatis beruntun tidak memotong sound effect sebelumnya.",
+        "Hubungkan Event Game ke AudioManager: OnShoot, OnReload, OnHurt, OnZombieRoar, OnButtonClick.",
+        "Konfigurasi Volume Balance: Standar SFX pada 0.95 dan BGM pada 0.75 sesuai instruksi dosen.",
+        "Tambahkan fungsi Volume Slider & Mute Audio yang tersimpan di PlayerPrefs."
+      ],
+      specs: [
+        { label: "Audio System", value: "Unity AudioMixer & Scriptable AudioManager" },
+        { label: "Audio Loading", value: "Decompress On Load (SFX), Streaming (BGM)" },
+        { label: "Default Balance", value: "Master SFX: 0.95 | Master BGM: 0.75" },
+        { label: "Performance", value: "AudioSource Object Pooling (Anti-Lag)" }
+      ],
+      tips: "Pastikan trek BGM di-set looping seamless di Unity Inspector tanpa ada jeda sepersekian detik di awal/akhir audio clip."
+    },
+    9: {
+      goal: "Mengimplementasikan seluruh desain antarmuka revisi Figma ke dalam Canvas Unity (UGUI), memastikan layout responsif pada rasio 16:9 dan terhubung dengan data game.",
+      steps: [
+        "Konfigurasi Canvas Scaler: Mode `Scale With Screen Size`, Reference Resolution `1920 x 1080`, Match 0.5 (Width/Height).",
+        "Implementasi UI Daily Reward: Grid kalender 7 hari, tracking hari aktif, tombol klaim, dan penyimpanan state ke PlayerPrefs/SaveData.",
+        "Implementasi UI Topup Cash: Tampilan paket cash, balance counter, dan feedback pop-up pembelian.",
+        "Implementasi Katalog Heroes & Guns: Kartu pilihan hero dan senjata lengkap dengan indikator status (Damage, Fire Rate, Ammo).",
+        "Pasang HUD In-Game: Bar HP, icon senjata aktif, sisa peluru (Ammo Count), indikator wave, dan tombol jeda.",
+        "Pastikan seluruh teks antarmuka menggunakan TextMeshPro dengan font Inter dan berbahasa Inggris."
+      ],
+      specs: [
+        { label: "Canvas Resolution", value: "1920 x 1080 px (16:9 Aspect Ratio)" },
+        { label: "UI System", value: "Unity UGUI & TextMeshPro" },
+        { label: "Anchoring", value: "Corner & Stretch Anchors (Bebas Distorsi Layar)" },
+        { label: "Teks UI", value: "Full English Language" }
+      ],
+      tips: "Gunakan 9-slicing pada border panel UI agar sudut Neo-Brutalist tetap tajam saat panel memanjang atau menyesuaikan konten teks."
+    }
+  };
+
   // State - Preloaded with DEFAULT_TASKS so UI renders immediately in 0ms!
   let tasks = JSON.parse(JSON.stringify(DEFAULT_TASKS));
   try {
@@ -468,7 +635,8 @@
     container.innerHTML = filtered.map(t => {
       const isMine = currentUser && t.owner.toLowerCase() === currentUser.toLowerCase();
       const statusClass = t.status;
-      const statusLabel = t.status === 'done' ? 'DONE ✓' : t.status === 'doing' ? 'IN PROGRESS' : 'AVAILABLE';
+      const statusIcon = t.status === 'done' ? 'check-circle-2' : t.status === 'doing' ? 'flame' : 'sparkles';
+      const statusLabel = t.status === 'done' ? 'DONE' : t.status === 'doing' ? 'IN PROGRESS' : 'AVAILABLE';
       const hasSubmission = Boolean(t.submissionLink || t.fileMeta);
 
       let downloadBtnHtml = '';
@@ -488,12 +656,12 @@
       }
 
       return `
-        <article class="task ${isMine ? 'is-mine' : ''}" data-id="${t.id}">
+        <article class="task ${isMine ? 'is-mine' : ''}" data-id="${t.id}" title="Klik kartu untuk melihat rincian &amp; panduan pengerjaan jobdesk">
           <div class="taskhead">
             <span class="id-badge">TASK / ${String(t.id).padStart(3, '0')}</span>
             <span class="category-badge">${safeHTML(t.category || 'Jobdesk')}</span>
             <span class="status ${statusClass}">
-              <i data-lucide="${t.status === 'done' ? 'check-circle-2' : t.status === 'doing' ? 'clock' : 'circle'}" style="width:11px;height:11px"></i>
+              <i data-lucide="${statusIcon}" style="width:12px;height:12px"></i>
               ${statusLabel}
             </span>
           </div>
@@ -501,13 +669,24 @@
           <h3>${safeHTML(t.title)}</h3>
 
           <div class="owner-tag ${!t.owner ? 'unclaimed' : 'clickable'}" ${t.owner ? `data-view-profile="${safeHTML(t.owner)}" title="Klik untuk cek profil &amp; preview progres ${safeHTML(t.owner)}"` : ''}>
-            <i data-lucide="user" style="width:13px;height:13px"></i>
-            <span>${t.owner ? safeHTML(t.owner.toUpperCase()) : 'BELUM DIAMBIL'}</span>
-            ${isMine ? ' • (TUGAS KAMU ⭐)' : ''}
-            ${t.owner ? '<span style="font-size:10px;text-decoration:underline;margin-left:4px;opacity:0.85">Lihat Profil ↗</span>' : ''}
+            <i data-lucide="${t.owner ? 'user-check' : 'user-x'}" style="width:13px;height:13px"></i>
+            <span>${t.owner ? safeHTML(t.owner.toUpperCase()) : 'TERSEDIA (OPEN)'}</span>
+            ${isMine ? '<span class="tag-mine"><i data-lucide="star" style="width:10px;height:10px"></i> TUGAS KAMU</span>' : ''}
+            ${t.owner ? '<span class="owner-tag-link"><i data-lucide="arrow-up-right" style="width:10px;height:10px"></i> Profil</span>' : ''}
           </div>
 
           <div class="desc">${safeHTML(t.desc || 'Tidak ada deskripsi.')}</div>
+
+          <!-- PANDUAN LENGKAP BUTTON BAR -->
+          <div class="card-detail-bar" data-act="view-detail" data-id="${t.id}" title="Klik untuk panduan &amp; checklist teknis jobdesk ini">
+            <span style="display:flex;align-items:center;gap:6px">
+              <i data-lucide="book-open" style="width:14px;height:14px;color:var(--orange)"></i>
+              <span>Panduan &amp; Rincian Pengerjaan</span>
+            </span>
+            <span style="display:flex;align-items:center;gap:2px;font-size:10px;color:#555">
+              Detail <i data-lucide="chevron-right" style="width:13px;height:13px"></i>
+            </span>
+          </div>
 
           ${t.figmaLink ? `
             <a href="${safeHTML(validURL(t.figmaLink))}" target="_blank" rel="noopener noreferrer" class="figma-link-btn">
@@ -520,7 +699,7 @@
             <div class="submission-box">
               <div class="submission-title">
                 <span style="display:flex;align-items:center;gap:4px">
-                  <i data-lucide="check" style="width:12px;height:12px"></i> HASIL TERKUMPUL
+                  <i data-lucide="check-check" style="width:12px;height:12px"></i> HASIL TERKUMPUL
                 </span>
                 <span>${t.status === 'done' ? 'SELESAI' : 'PROGRES'}</span>
               </div>
@@ -543,7 +722,11 @@
 
           <div class="taskfoot">
             <span class="taskfoot-status">
-              ${t.status === 'done' ? '✓ COMPLETED' : t.status === 'doing' ? '↗ IN ACTION' : '＋ OPEN JOB'}
+              ${t.status === 'done' 
+                ? '<span style="display:inline-flex;align-items:center;gap:4px;color:#065f46;font-weight:900"><i data-lucide="check-check" style="width:13px;height:13px"></i> SELESAI</span>' 
+                : t.status === 'doing' 
+                ? '<span style="display:inline-flex;align-items:center;gap:4px;color:#b45309;font-weight:900"><i data-lucide="zap" style="width:13px;height:13px"></i> PROGRES AKTIF</span>' 
+                : '<span style="display:inline-flex;align-items:center;gap:4px;color:#6b7280;font-weight:900"><i data-lucide="circle-dot" style="width:13px;height:13px"></i> BELUM DIAMBIL</span>'}
             </span>
             <div class="task-actions">
               <button class="taskbtn submit" data-act="submit-task" data-id="${t.id}" title="Kumpulkan hasil / update status">
@@ -552,18 +735,18 @@
 
               ${t.status === 'open' ? `
                 <button class="taskbtn claim" data-act="take" data-id="${t.id}">
-                  <i data-lucide="hand" style="width:12px;height:12px"></i> KLAIM
+                  <i data-lucide="sparkles" style="width:12px;height:12px"></i> KLAIM
                 </button>
               ` : t.status === 'doing' ? `
                 <button class="taskbtn" data-act="mark-done" data-id="${t.id}" title="Tandai selesai">
-                  <i data-lucide="check" style="width:12px;height:12px"></i> DONE ✓
+                  <i data-lucide="check" style="width:12px;height:12px"></i> SELESAI
                 </button>
                 <button class="taskbtn" data-act="cancel-claim" data-id="${t.id}" title="Batalkan klaim tugas ini (kembali ke Available)" style="background:#fff2f2;color:#b91c1c;border-color:#b91c1c">
-                  <i data-lucide="x-circle" style="width:12px;height:12px"></i> BATAL KLAIM
+                  <i data-lucide="x" style="width:12px;height:12px"></i> BATAL KLAIM
                 </button>
               ` : `
                 <button class="taskbtn" data-act="reopen" data-id="${t.id}">
-                  <i data-lucide="rotate-ccw" style="width:12px;height:12px"></i> RE-OPEN
+                  <i data-lucide="rotate-ccw" style="width:12px;height:12px"></i> BUKA LAGI
                 </button>
               `}
 
@@ -583,6 +766,225 @@
     }).join('');
 
     refreshIcons();
+  }
+
+  function render() {
+    renderStats();
+    renderTasks();
+  }
+
+  // ----------------------------------------------------
+  // TASK DETAIL & GUIDELINES POPUP MODAL
+  // ----------------------------------------------------
+  function openTaskDetailModal(task) {
+    if (!task) return;
+    const modal = $('modal-task-detail-wrap');
+    if (!modal) return;
+
+    const exp = TASK_EXPLANATIONS[task.id] || {
+      goal: task.desc || "Menyelesaikan jobdesk sesuai arahan dan revisi dosen.",
+      steps: [
+        "Pahami kebutuhan dan instruksi yang tertera pada deskripsi jobdesk.",
+        "Kerjakan tahapan pengerjaan secara bertahap dan rapi.",
+        "Komunikasikan progres secara berkala dengan tim di halaman Profil.",
+        "Kumpulkan hasil akhir melalui tautan Google Drive / file ZIP."
+      ],
+      specs: [
+        { label: "Target", value: "Revisi Game Outbreak" },
+        { label: "Format", value: "Sesuai Standar Aset / Kode" }
+      ],
+      tips: "Pastikan selalu berkonsultasi dengan Reihan (Lead) sebelum finalisasi."
+    };
+
+    const isMine = currentUser && task.owner && task.owner.toLowerCase() === currentUser.toLowerCase();
+    const isDoing = task.status === 'doing';
+    const isDone = task.status === 'done';
+    const isOpen = task.status === 'open';
+
+    $('detail-modal-header-id').textContent = `TASK / #${String(task.id).padStart(3, '0')} — ${(task.category || 'JOBDESK').toUpperCase()}`;
+
+    const statusPillClass = `status-${task.status}`;
+    const statusLabel = isDone ? 'SELESAI (DONE)' : isDoing ? 'SEDANG DIKERJAKAN' : 'TERSEDIA (OPEN)';
+    const statusIcon = isDone ? 'check-circle-2' : isDoing ? 'flame' : 'sparkles';
+
+    const stepsHtml = (exp.steps || []).map((step, idx) => `
+      <li class="detail-step-item">
+        <span class="detail-step-num">${idx + 1}</span>
+        <div>${safeHTML(step)}</div>
+      </li>
+    `).join('');
+
+    const specsHtml = (exp.specs || []).map(sp => `
+      <div class="detail-spec-chip">
+        <span class="detail-spec-label">${safeHTML(sp.label)}</span>
+        <span class="detail-spec-val">${safeHTML(sp.value)}</span>
+      </div>
+    `).join('');
+
+    let submissionInfoHtml = '';
+    if (task.submissionLink || task.fileMeta) {
+      submissionInfoHtml = `
+        <div class="detail-box" style="background:#f0fdf4;border-color:#16a34a">
+          <div class="detail-box-head" style="color:#15803d;border-bottom-color:#16a34a">
+            <i data-lucide="check-check" style="width:16px;height:16px"></i>
+            <span>HASIL TUGAS TELAH DIKUMPULKAN</span>
+          </div>
+          ${task.submissionLink ? `
+            <div style="margin-bottom:8px">
+              <span style="font-weight:900;font-size:12px">Link Hasil:</span>
+              <a href="${safeHTML(validURL(task.submissionLink))}" target="_blank" rel="noopener noreferrer" style="color:#047857;font-weight:900;text-decoration:underline;margin-left:4px">
+                ${safeHTML(task.submissionLink)} ↗
+              </a>
+            </div>
+          ` : ''}
+          ${task.fileMeta ? `
+            <div style="font-size:12px;font-weight:800;color:#166534">
+              Lampiran File: ${safeHTML(task.fileMeta.name)} (${safeHTML(task.fileMeta.size)})
+            </div>
+          ` : ''}
+          ${task.notes ? `
+            <div style="font-size:12px;color:#333;font-style:italic;margin-top:6px">
+              Catatan: "${safeHTML(task.notes)}"
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    $('detail-modal-body').innerHTML = `
+      <div class="detail-header-meta">
+        <span class="detail-pill cat">
+          <i data-lucide="tag" style="width:12px;height:12px"></i> ${safeHTML(task.category || 'Jobdesk')}
+        </span>
+        <span class="detail-pill owner">
+          <i data-lucide="user-check" style="width:12px;height:12px"></i> PJ: ${task.owner ? safeHTML(task.owner.toUpperCase()) : 'BELUM DIAMBIL'}
+        </span>
+        <span class="detail-pill ${statusPillClass}">
+          <i data-lucide="${statusIcon}" style="width:12px;height:12px"></i> ${statusLabel}
+        </span>
+        ${isMine ? '<span class="tag-mine"><i data-lucide="star" style="width:11px;height:11px"></i> TUGAS KAMU</span>' : ''}
+      </div>
+
+      <h1 class="detail-task-title">${safeHTML(task.title)}</h1>
+
+      <!-- Goal & Output -->
+      <div class="detail-box goal">
+        <div class="detail-box-head">
+          <i data-lucide="target" style="width:16px;height:16px"></i>
+          <span>Tujuan &amp; Ekspektasi Output</span>
+        </div>
+        <div class="detail-box-p goal-p">${safeHTML(exp.goal)}</div>
+      </div>
+
+      <!-- Technical Specs -->
+      ${exp.specs && exp.specs.length ? `
+        <div class="detail-box">
+          <div class="detail-box-head">
+            <i data-lucide="cpu" style="width:16px;height:16px"></i>
+            <span>Spesifikasi Teknis &amp; Standarisasi</span>
+          </div>
+          <div class="detail-specs-grid">
+            ${specsHtml}
+          </div>
+        </div>
+      ` : ''}
+
+      <!-- Step by Step Checklist -->
+      <div class="detail-box">
+        <div class="detail-box-head">
+          <i data-lucide="list-checks" style="width:16px;height:16px"></i>
+          <span>Checklist Langkah Pengerjaan</span>
+        </div>
+        <ol class="detail-step-list">
+          ${stepsHtml}
+        </ol>
+      </div>
+
+      <!-- Lecturer Notes / Tips -->
+      ${exp.tips ? `
+        <div class="detail-box tips">
+          <div class="detail-box-head">
+            <i data-lucide="lightbulb" style="width:16px;height:16px"></i>
+            <span>Catatan Masukan Dosen &amp; Tips Penting</span>
+          </div>
+          <div class="detail-box-p tips-p">${safeHTML(exp.tips)}</div>
+        </div>
+      ` : ''}
+
+      ${submissionInfoHtml}
+    `;
+
+    // Modal Footer Actions
+    let actionButtons = '';
+    if (task.figmaLink) {
+      actionButtons += `
+        <a href="${safeHTML(validURL(task.figmaLink))}" target="_blank" rel="noopener noreferrer" class="primary" style="background:#111;text-decoration:none">
+          <i data-lucide="palette" style="width:14px;height:14px"></i> Buka Acuan Figma ↗
+        </a>
+      `;
+    }
+
+    if (isOpen) {
+      actionButtons += `
+        <button type="button" class="primary" data-detail-act="take" data-id="${task.id}" style="background:var(--yellow);color:#111">
+          <i data-lucide="sparkles" style="width:14px;height:14px"></i> Klaim Jobdesk Ini
+        </button>
+      `;
+    } else if (isMine || (currentUser && isReihan())) {
+      actionButtons += `
+        <button type="button" class="primary" data-detail-act="submit" data-id="${task.id}">
+          <i data-lucide="upload-cloud" style="width:14px;height:14px"></i> Kumpulkan Hasil
+        </button>
+      `;
+    }
+
+    $('detail-modal-footer').innerHTML = `
+      <div style="font-size:12px;font-weight:800;color:#555">
+        Jobdesk #${task.id} • Game Outbreak (RRBY)
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        ${actionButtons}
+        <button type="button" class="secondary" id="btn-footer-close-detail" style="border:2px solid var(--ink);padding:9px 16px;font-weight:900;font-size:12px;cursor:pointer;background:#fff">
+          Tutup
+        </button>
+      </div>
+    `;
+
+    // Bind footer actions
+    const closeBtn = $('btn-footer-close-detail');
+    if (closeBtn) closeBtn.addEventListener('click', closeTaskDetailModal);
+
+    const detailTakeBtn = $('detail-modal-footer').querySelector('[data-detail-act="take"]');
+    if (detailTakeBtn) {
+      detailTakeBtn.addEventListener('click', async () => {
+        closeTaskDetailModal();
+        if (!currentUser) {
+          openLoginModal(task.owner || '');
+        } else {
+          await API.claimTask(task.id, currentUser);
+          task.status = 'doing';
+          saveLocalBackup();
+          render();
+          showToast(`Tugas #${task.id} (${task.title}) berhasil diklaim! ⚡`);
+        }
+      });
+    }
+
+    const detailSubmitBtn = $('detail-modal-footer').querySelector('[data-detail-act="submit"]');
+    if (detailSubmitBtn) {
+      detailSubmitBtn.addEventListener('click', () => {
+        closeTaskDetailModal();
+        openSubmitModal(task.id);
+      });
+    }
+
+    modal.classList.add('show');
+    refreshIcons();
+  }
+
+  function closeTaskDetailModal() {
+    const modal = $('modal-task-detail-wrap');
+    if (modal) modal.classList.remove('show');
   }
 
   function render() {
@@ -706,15 +1108,21 @@
           <div style="border:2px solid var(--ink);padding:12px;margin-bottom:10px;background:#faf9f5">
             <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #ddd;padding-bottom:6px;margin-bottom:8px">
               <div>
-                <span style="background:var(--yellow);border:1px solid #111;padding:2px 8px;font-size:11px;font-weight:900">👤 ${safeHTML(s.owner)}</span>
+                <span style="background:var(--yellow);border:1.5px solid var(--ink);padding:2px 8px;font-size:11px;font-weight:900;display:inline-flex;align-items:center;gap:4px">
+                  <i data-lucide="user-check" style="width:12px;height:12px"></i> ${safeHTML(s.owner)}
+                </span>
                 <b style="margin-left:8px;font-size:13px">#${s.id} - ${safeHTML(s.title)}</b>
               </div>
-              <span style="font-size:10px;font-weight:900;color:#065f46;background:#b8f5a5;border:1px solid #065f46;padding:2px 6px">TERKUMPUL ✓</span>
+              <span style="font-size:10px;font-weight:900;color:#065f46;background:#b8f5a5;border:1px solid #065f46;padding:2px 6px;display:inline-flex;align-items:center;gap:3px">
+                <i data-lucide="check-check" style="width:11px;height:11px"></i> TERKUMPUL
+              </span>
             </div>
 
             ${hasLink ? `
               <div style="margin-bottom:6px">
-                <span style="font-size:11px;font-weight:900">🔗 Tautan Hasil:</span>
+                <span style="font-size:11px;font-weight:900;display:inline-flex;align-items:center;gap:4px">
+                  <i data-lucide="link" style="width:12px;height:12px"></i> Tautan Hasil:
+                </span>
                 <a href="${safeHTML(validURL(s.submissionLink))}" target="_blank" rel="noopener noreferrer" style="color:#047857;font-weight:900;text-decoration:underline;margin-left:4px">
                   ${safeHTML(s.submissionLink)} ↗
                 </a>
@@ -725,7 +1133,7 @@
               <div style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid #111;padding:6px 10px;margin-bottom:6px">
                 <span style="font-size:11px;font-weight:800;display:flex;align-items:center;gap:6px">
                   <i data-lucide="archive" style="width:14px;height:14px"></i>
-                  📦 ${safeHTML(s.fileMeta.name)} (${safeHTML(s.fileMeta.size)})
+                  ${safeHTML(s.fileMeta.name)} (${safeHTML(s.fileMeta.size)})
                 </span>
                 <a href="${dlUrl}" download="${safeHTML(s.fileMeta.name)}" class="download-btn" style="padding:4px 10px;font-size:11px">
                   <i data-lucide="download" style="width:12px;height:12px"></i> Unduh File ZIP
@@ -872,12 +1280,12 @@
 
         <div>
           ${isOwnProfile ? `
-            <span style="background:var(--yellow);border:1.5px solid var(--ink);padding:6px 12px;font-size:11.5px;font-weight:900;box-shadow:2px 2px 0 var(--ink)">
-              ⭐ PROFIL KAMU (${safeHTML(currentUser)})
+            <span style="background:var(--yellow);border:1.5px solid var(--ink);padding:6px 12px;font-size:11.5px;font-weight:900;box-shadow:2px 2px 0 var(--ink);display:inline-flex;align-items:center;gap:5px">
+              <i data-lucide="sparkles" style="width:13px;height:13px"></i> PROFIL KAMU (${safeHTML(currentUser)})
             </span>
           ` : `
-            <span style="background:#fff;border:1.5px solid var(--ink);padding:6px 12px;font-size:11.5px;font-weight:900;box-shadow:2px 2px 0 var(--ink)">
-              👁️ MELIHAT PROFIL: ${safeHTML(memberName.toUpperCase())}
+            <span style="background:#fff;border:1.5px solid var(--ink);padding:6px 12px;font-size:11.5px;font-weight:900;box-shadow:2px 2px 0 var(--ink);display:inline-flex;align-items:center;gap:5px">
+              <i data-lucide="eye" style="width:13px;height:13px"></i> PROFIL: ${safeHTML(memberName.toUpperCase())}
             </span>
           `}
         </div>
@@ -909,7 +1317,7 @@
             </div>
             <div class="profile-mini-stat" style="background:#b8f5a5">
               <div class="val" style="color:#065f46">${memberTasks.filter(t => t.status === 'done').length}</div>
-              <div class="lbl">Selesai ✓</div>
+              <div class="lbl">Selesai</div>
             </div>
             <div class="profile-mini-stat" style="background:#fed7aa">
               <div class="val" style="color:#9a3412">${memberUpdates.length}</div>
@@ -983,7 +1391,9 @@
 
             ${hasSubmission ? `
               <div style="background:#fff;border:1.5px solid var(--ink);padding:8px 10px;margin-bottom:10px;font-size:11px">
-                <div style="font-weight:900;color:#047857;margin-bottom:3px">✓ Hasil Terkumpul:</div>
+                <div style="font-weight:900;color:#047857;margin-bottom:3px;display:flex;align-items:center;gap:4px">
+                  <i data-lucide="check-check" style="width:12px;height:12px"></i> Hasil Terkumpul:
+                </div>
                 ${t.submissionLink ? `<a href="${safeHTML(validURL(t.submissionLink))}" target="_blank" rel="noopener noreferrer" style="color:var(--orange);font-weight:800;text-decoration:underline">Buka Tautan Drive/Figma ↗</a>` : ''}
                 ${t.fileMeta ? `<div>File ZIP: <b>${safeHTML(t.fileMeta.name)}</b> (${safeHTML(t.fileMeta.size)})</div>` : ''}
               </div>
@@ -997,15 +1407,15 @@
                 </button>
                 <button type="button" class="secondary" data-profile-act="mark-done" data-id="${t.id}" style="padding:7px 12px;font-size:11px">
                   <i data-lucide="check" style="width:12px;height:12px"></i>
-                  <span>Tandai Selesai ✓</span>
+                  <span>Tandai Selesai</span>
                 </button>
                 <button type="button" class="secondary" data-profile-act="cancel-claim" data-id="${t.id}" style="padding:7px 10px;font-size:11px;color:#991b1b">
                   <span>Batal Klaim</span>
                 </button>
               </div>
             ` : `
-              <div style="font-size:11px;font-weight:800;color:#555;padding-top:6px;border-top:1px dashed #ccc">
-                ⚡ Sedang dikerjakan oleh ${safeHTML(memberName)}.
+              <div style="font-size:11px;font-weight:800;color:#555;padding-top:6px;border-top:1px dashed #ccc;display:flex;align-items:center;gap:4px">
+                <i data-lucide="flame" style="width:12px;height:12px;color:var(--orange)"></i> Sedang dikerjakan oleh ${safeHTML(memberName)}.
               </div>
             `}
           </div>
@@ -1017,8 +1427,8 @@
     if (otherTasks.length > 0) {
       html += `
         <div style="margin-top:14px;border-top:2px dashed #ddd;padding-top:12px">
-          <div style="font-size:11.5px;font-weight:900;margin-bottom:8px;color:#444">
-            📋 JOBDESK LAINNYA MILIK ${safeHTML(memberName.toUpperCase())} (${otherTasks.length})
+          <div style="font-size:11.5px;font-weight:900;margin-bottom:8px;color:#444;display:flex;align-items:center;gap:5px">
+            <i data-lucide="layers" style="width:13px;height:13px"></i> JOBDESK LAINNYA MILIK ${safeHTML(memberName.toUpperCase())} (${otherTasks.length})
           </div>
           <div style="display:flex;flex-direction:column;gap:6px">
             ${otherTasks.map(ot => `
@@ -1028,7 +1438,7 @@
                   <span style="margin-left:4px">${safeHTML(ot.title)}</span>
                 </div>
                 <span class="status ${ot.status}" style="font-size:9.5px;padding:2px 6px">
-                  ${ot.status === 'done' ? '✓ SELESAI' : 'AVAILABLE'}
+                  ${ot.status === 'done' ? '<span style="display:inline-flex;align-items:center;gap:3px"><i data-lucide="check" style="width:10px;height:10px"></i> SELESAI</span>' : 'AVAILABLE'}
                 </span>
               </div>
             `).join('')}
@@ -1770,7 +2180,7 @@
     };
 
     // Dismiss on background click
-    ['modal-submit-wrap', 'modal-login-wrap', 'modal-guidelines-wrap', 'modal-task-wrap', 'modal-archive-wrap', 'modal-sync-wrap'].forEach(id => {
+    ['modal-submit-wrap', 'modal-login-wrap', 'modal-guidelines-wrap', 'modal-task-wrap', 'modal-archive-wrap', 'modal-sync-wrap', 'modal-task-detail-wrap'].forEach(id => {
       const el = $(id);
       if (el) {
         el.addEventListener('click', (e) => {
@@ -1778,6 +2188,12 @@
         });
       }
     });
+
+    // Close button for Task Detail Modal
+    const btnCloseDetail = $('btn-close-task-detail');
+    if (btnCloseDetail) {
+      btnCloseDetail.addEventListener('click', closeTaskDetailModal);
+    }
 
     // Filters: Status
     $('status-filters').addEventListener('click', (e) => {
@@ -1809,90 +2225,113 @@
       render();
     });
 
-    // Task Card Actions & Member Profile Click
+    // Task Card Actions & Member Profile Click & Detail Popup
     $('tasks').addEventListener('click', async (e) => {
+      // 1. Cek profil anggota: jika klik badge nama PJ, buka halaman profilnya (jangan buka popup detail)
       const profileBadge = e.target.closest('[data-view-profile]');
       if (profileBadge) {
         openProfilePage(profileBadge.dataset.viewProfile);
         return;
       }
 
+      // 2. Cek aksi tombol langsung
       const btn = e.target.closest('[data-act]');
-      if (!btn) return;
-      const act = btn.dataset.act;
-      const taskId = Number(btn.dataset.id);
-      const task = tasks.find(t => t.id === taskId);
-      if (!task) return;
+      if (btn) {
+        const act = btn.dataset.act;
+        const taskId = Number(btn.dataset.id);
+        const task = tasks.find(t => t.id === taskId);
+        if (!task) return;
 
-      if (act === 'submit-task') {
-        openSubmitModal(taskId);
-        return;
-      }
-
-      if (act === 'edit') {
-        if (!isReihan()) {
-          alert('Akses Dibatasi: Hanya Reihan (Lead) yang memiliki izin untuk mengedit rincian jobdesk!');
-          return;
-        }
-        openTaskEditor(task);
-        return;
-      }
-
-      if (act === 'take') {
-        if (!currentUser) {
-          const want = confirm('Silakan login terlebih dahulu untuk klaim tugas ini. Buka dialog login?');
-          if (want) openLoginModal(task.owner || '');
+        if (act === 'view-detail') {
+          openTaskDetailModal(task);
           return;
         }
 
-        if (task.owner && task.owner.toLowerCase() !== currentUser.toLowerCase()) {
-          const proceed = confirm(`Perhatian: Tugas #${task.id} ini dialokasikan untuk ${task.owner}.\nApakah kamu (${currentUser}) yakin ingin mengklaim tugas milik ${task.owner}?`);
-          if (!proceed) return;
+        if (act === 'submit-task') {
+          openSubmitModal(taskId);
+          return;
         }
 
-        await API.claimTask(taskId, currentUser);
-        task.status = 'doing';
-        saveLocalBackup();
-        render();
-        showToast(`Tugas #${taskId} (${task.title}) berhasil diklaim! ⚡`);
-        return;
-      }
-
-      if (act === 'cancel-claim') {
-        const canCancel = confirm(`Batalkan klaim tugas #${taskId} (${task.title})?\nStatus tugas akan dikembalikan menjadi Available.`);
-        if (!canCancel) return;
-
-        await API.updateStatus(taskId, 'open');
-        task.status = 'open';
-        saveLocalBackup();
-        render();
-        showToast(`Klaim tugas #${taskId} dibatalkan (Available kembali).`, '↩');
-        return;
-      }
-
-      if (act === 'mark-done') {
-        if (!task.submissionLink && !task.fileMeta) {
-          const want = confirm('Tugas ini belum memiliki tautan Drive atau file ZIP. Buka form pengumpulan sekarang?');
-          if (want) {
-            openSubmitModal(taskId);
+        if (act === 'edit') {
+          if (!isReihan()) {
+            alert('Akses Dibatasi: Hanya Reihan (Lead) yang memiliki izin untuk mengedit rincian jobdesk!');
             return;
           }
+          openTaskEditor(task);
+          return;
         }
-        await API.updateStatus(taskId, 'done');
-        task.status = 'done';
-        saveLocalBackup();
-        render();
-        showToast(`Tugas #${taskId} ditandai selesai! ✓`);
+
+        if (act === 'take') {
+          if (!currentUser) {
+            const want = confirm('Silakan login terlebih dahulu untuk klaim tugas ini. Buka dialog login?');
+            if (want) openLoginModal(task.owner || '');
+            return;
+          }
+
+          if (task.owner && task.owner.toLowerCase() !== currentUser.toLowerCase()) {
+            const proceed = confirm(`Perhatian: Tugas #${task.id} ini dialokasikan untuk ${task.owner}.\nApakah kamu (${currentUser}) yakin ingin mengklaim tugas milik ${task.owner}?`);
+            if (!proceed) return;
+          }
+
+          await API.claimTask(taskId, currentUser);
+          task.status = 'doing';
+          saveLocalBackup();
+          render();
+          showToast(`Tugas #${taskId} (${task.title}) berhasil diklaim! ⚡`);
+          return;
+        }
+
+        if (act === 'cancel-claim') {
+          const canCancel = confirm(`Batalkan klaim tugas #${taskId} (${task.title})?\nStatus tugas akan dikembalikan menjadi Available.`);
+          if (!canCancel) return;
+
+          await API.updateStatus(taskId, 'open');
+          task.status = 'open';
+          saveLocalBackup();
+          render();
+          showToast(`Klaim tugas #${taskId} dibatalkan (Available kembali).`, '↩');
+          return;
+        }
+
+        if (act === 'mark-done') {
+          if (!task.submissionLink && !task.fileMeta) {
+            const want = confirm('Tugas ini belum memiliki tautan Drive atau file ZIP. Buka form pengumpulan sekarang?');
+            if (want) {
+              openSubmitModal(taskId);
+              return;
+            }
+          }
+          await API.updateStatus(taskId, 'done');
+          task.status = 'done';
+          saveLocalBackup();
+          render();
+          showToast(`Tugas #${taskId} ditandai selesai! ✓`);
+          return;
+        }
+
+        if (act === 'reopen') {
+          await API.updateStatus(taskId, 'doing');
+          task.status = 'doing';
+          saveLocalBackup();
+          render();
+          showToast(`Tugas #${taskId} dibuka kembali.`);
+          return;
+        }
+      }
+
+      // 3. Jika klik link (misal link Figma/Drive) atau klik di dalam kontainer tombol aksi, jangan buka popup
+      if (e.target.closest('a') || e.target.closest('.task-actions')) {
         return;
       }
 
-      if (act === 'reopen') {
-        await API.updateStatus(taskId, 'doing');
-        task.status = 'doing';
-        saveLocalBackup();
-        render();
-        showToast(`Tugas #${taskId} dibuka kembali.`);
-        return;
+      // 4. Klik kartu tugas (task card) -> Buka modal rincian & penjelasan jobdesk!
+      const taskCard = e.target.closest('.task');
+      if (taskCard) {
+        const taskId = Number(taskCard.dataset.id);
+        const task = tasks.find(t => t.id === taskId);
+        if (task) {
+          openTaskDetailModal(task);
+        }
       }
     });
   }

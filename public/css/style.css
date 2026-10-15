@@ -1924,3 +1924,250 @@ h1 span {
   background: #eab308;
 }
 
+/* ====================================================
+   11. MODERN ICONS & TASK DETAIL POPUP STYLES
+   ==================================================== */
+.task {
+  cursor: pointer;
+}
+
+.task:hover {
+  transform: translateY(-2px);
+  box-shadow: 6px 6px 0 var(--ink);
+}
+
+.card-detail-bar {
+  margin-top: 12px;
+  margin-bottom: 2px;
+  padding: 8px 10px;
+  background: #faf8f2;
+  border: 1.5px dashed var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 800;
+  color: #111;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.card-detail-bar:hover {
+  background: var(--yellow);
+  border-style: solid;
+  border-color: var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
+  transform: translateY(-1px);
+}
+
+.card-detail-bar i {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.owner-tag-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 6px;
+  padding: 2px 6px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 2px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.tag-mine {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--orange);
+  color: #fff;
+  border: 1.5px solid var(--ink);
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  box-shadow: 1.5px 1.5px 0 var(--ink);
+  margin-left: 4px;
+}
+
+/* Modal Task Detail Elements */
+.detail-header-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.detail-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 4px 9px;
+  border: 1.5px solid var(--ink);
+  background: #fff;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+.detail-pill.cat {
+  background: var(--gray-100);
+}
+
+.detail-pill.owner {
+  background: var(--yellow);
+}
+
+.detail-pill.status-open {
+  background: #fff;
+  color: #111;
+}
+
+.detail-pill.status-doing {
+  background: var(--yellow);
+  color: #111;
+}
+
+.detail-pill.status-done {
+  background: var(--green-light);
+  color: #065f46;
+  border-color: #065f46;
+}
+
+.detail-task-title {
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: -0.8px;
+  line-height: 1.2;
+  margin: 0 0 16px;
+  color: var(--ink);
+}
+
+.detail-box {
+  background: #fff;
+  border: 2.5px solid var(--ink);
+  box-shadow: 4px 4px 0 var(--ink);
+  padding: 16px 18px;
+  margin-bottom: 14px;
+}
+
+.detail-box-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1.5px solid var(--ink);
+}
+
+.detail-box.goal {
+  background: #fffdf5;
+  border-left: 6px solid var(--orange);
+}
+
+.detail-box.goal .detail-box-head {
+  color: var(--orange);
+}
+
+.detail-box.goal-p {
+  font-size: 13.5px;
+  line-height: 1.6;
+  font-weight: 600;
+  color: #222;
+}
+
+.detail-step-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.detail-step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #faf8f5;
+  border: 1.5px solid var(--ink);
+  padding: 10px 12px;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.detail-step-num {
+  background: var(--ink);
+  color: #fff;
+  font-weight: 900;
+  font-size: 11px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.detail-specs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 600px) {
+  .detail-specs-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detail-spec-chip {
+  background: #f8fafc;
+  border: 1.5px solid var(--ink);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.detail-spec-label {
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748b;
+}
+
+.detail-spec-val {
+  font-size: 12px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.detail-box.tips {
+  background: #f0fdf4;
+  border-left: 6px solid #16a34a;
+}
+
+.detail-box.tips .detail-box-head {
+  color: #15803d;
+}
+
+.detail-box.tips-p {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #14532d;
+  font-weight: 600;
+}
+
+
