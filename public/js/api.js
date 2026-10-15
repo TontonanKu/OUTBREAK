@@ -89,21 +89,36 @@ const API = {
     if (!user) {
       user = localStorage.getItem('rrby_outbreak_current_user') || '';
     }
-    // Hanya Reihan yang berwenang membatalkan klaim (status 'open')
-    if (status === 'open' && (!user || user.toLowerCase() !== 'reihan')) {
-      return { success: false, message: 'Akses Dibatasi: Hanya Reihan yang berwenang membatalkan klaim tugas!' };
-    }
 
     let tasks = await this.getTasks();
-    if (!tasks) return { success: false };
+    if (!tasks) return { success: false, message: 'Data tugas tidak ditemukan.' };
     const task = tasks.find(t => t.id === taskId);
-    if (task) {
-      task.status = status;
-      if (status === 'open') {
-        task.claimedBy = '';
-      }
-      await this.saveAllTasks(tasks);
+    if (!task) return { success: false, message: 'Tugas tidak ditemukan.' };
+
+    const isReihanUser = user && user.toLowerCase() === 'reihan';
+    const isTaskOwner = user && task.owner && task.owner.toLowerCase() === user.toLowerCase();
+
+    // Hanya Reihan atau pemilik tugas yang berwenang membatalkan klaim (status 'open')
+    if (status === 'open' && !isReihanUser && !isTaskOwner) {
+      return { 
+        success: false, 
+        message: `Akses Dibatasi: Tugas #${task.id} adalah milik ${task.owner}. Hanya ${task.owner} atau Reihan yang berwenang membatalkan klaim!` 
+      };
     }
+
+    // Hanya Reihan yang berwenang membuka kembali tugas yang sudah selesai
+    if (task.status === 'done' && status === 'doing' && !isReihanUser) {
+      return { 
+        success: false, 
+        message: 'Akses Dibatasi: Hanya Reihan (Project Lead) yang berwenang membuka kembali tugas!' 
+      };
+    }
+
+    task.status = status;
+    if (status === 'open') {
+      task.claimedBy = '';
+    }
+    await this.saveAllTasks(tasks);
     return { success: true };
   },
 

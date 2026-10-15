@@ -149,12 +149,29 @@ app.post('/api/tasks/:id/status', (req, res) => {
   const task = tasks.find(t => t.id === id);
   if (!task) return res.status(404).json({ success: false, message: 'Tugas tidak ditemukan.' });
 
-  // Hanya Reihan yang memiliki otoritas untuk membatalkan klaim (status 'open') atau membuka kembali tugas
-  if ((status === 'open' || (task.status === 'done' && status === 'doing')) && (!user || user.toLowerCase() !== 'reihan')) {
-    return res.status(403).json({ success: false, message: 'Akses Dibatasi: Hanya Reihan (Project Lead) yang berwenang membatalkan klaim atau membuka kembali tugas!' });
+  const isReihanUser = user && user.toLowerCase() === 'reihan';
+  const isTaskOwner = user && task.owner && task.owner.toLowerCase() === user.toLowerCase();
+
+  // Hanya Reihan atau pemilik tugas yang berwenang membatalkan klaim (status 'open')
+  if (status === 'open' && !isReihanUser && !isTaskOwner) {
+    return res.status(403).json({ 
+      success: false, 
+      message: `Akses Dibatasi: Tugas #${task.id} adalah milik ${task.owner}. Hanya ${task.owner} atau Reihan yang berwenang membatalkan klaim!` 
+    });
+  }
+
+  // Hanya Reihan yang berwenang membuka kembali tugas yang sudah selesai
+  if (task.status === 'done' && status === 'doing' && !isReihanUser) {
+    return res.status(403).json({ 
+      success: false, 
+      message: 'Akses Dibatasi: Hanya Reihan (Project Lead) yang berwenang membuka kembali tugas!' 
+    });
   }
 
   task.status = status;
+  if (status === 'open') {
+    task.claimedBy = '';
+  }
   writeTasks(tasks);
 
   res.json({ success: true, message: `Status tugas #${id} diperbarui menjadi ${status}.`, task });

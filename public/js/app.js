@@ -532,13 +532,36 @@
       $('auth-logged-in').style.display = 'flex';
       $('user-avatar').textContent = currentUser.charAt(0).toUpperCase();
       $('user-display-name').textContent = `Halo, ${currentUser} ⚡`;
-      document.querySelectorAll('.member-pill').forEach(btn => {
+      document.querySelectorAll('#auth-logged-out .member-pill').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.user && btn.dataset.user.toLowerCase() === currentUser.toLowerCase());
       });
+
+      // Sinkronkan status aktif tombol navigasi Profil Saya vs Tugas Saya
+      const profileContainer = $('view-profile-container');
+      const isProfileOpen = profileContainer && profileContainer.style.display !== 'none';
+      if (isProfileOpen && activeProfileMember && activeProfileMember.toLowerCase() === currentUser.toLowerCase()) {
+        updateNavButtons('profile');
+      } else if (!isProfileOpen && activeMemberFilter && activeMemberFilter.toLowerCase() === currentUser.toLowerCase()) {
+        updateNavButtons('my-tasks');
+      } else {
+        updateNavButtons('none');
+      }
     } else {
       $('auth-logged-out').style.display = 'flex';
       $('auth-logged-in').style.display = 'none';
-      document.querySelectorAll('.member-pill').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('#auth-logged-out .member-pill').forEach(btn => btn.classList.remove('active'));
+      updateNavButtons('none');
+    }
+  }
+
+  function updateNavButtons(activeState) {
+    const profileBtn = $('btn-open-my-profile');
+    const myTasksBtn = $('btn-my-tasks');
+    if (profileBtn) {
+      profileBtn.classList.toggle('active', activeState === 'profile');
+    }
+    if (myTasksBtn) {
+      myTasksBtn.classList.toggle('active', activeState === 'my-tasks');
     }
   }
 
@@ -741,12 +764,12 @@
                 <button class="taskbtn" data-act="mark-done" data-id="${t.id}" title="Tandai selesai">
                   <i data-lucide="check" style="width:12px;height:12px"></i> SELESAI
                 </button>
-                ${isReihan() ? `
-                  <button class="taskbtn" data-act="cancel-claim" data-id="${t.id}" title="Batalkan klaim tugas ini (Khusus Reihan)" style="background:#fff2f2;color:#b91c1c;border-color:#b91c1c">
+                ${(isReihan() || (currentUser && t.owner && t.owner.toLowerCase() === currentUser.toLowerCase())) ? `
+                  <button class="taskbtn" data-act="cancel-claim" data-id="${t.id}" title="${isReihan() && (!currentUser || !t.owner || t.owner.toLowerCase() !== currentUser.toLowerCase()) ? 'Batalkan klaim tugas ini (Reihan)' : 'Batalkan klaim tugas milik kamu'}" style="background:#fff2f2;color:#b91c1c;border-color:#b91c1c">
                     <i data-lucide="x" style="width:12px;height:12px"></i> BATAL KLAIM
                   </button>
                 ` : `
-                  <button class="taskbtn" data-act="cancel-claim" data-id="${t.id}" title="Hanya Reihan yang berwenang membatalkan klaim" style="color:#777;background:#f3f4f6">
+                  <button class="taskbtn" data-act="cancel-claim" data-id="${t.id}" title="Hanya pemilik tugas (${safeHTML(t.owner || 'Member')}) atau Reihan yang dapat membatalkan klaim" style="color:#777;background:#f3f4f6">
                     <i data-lucide="lock" style="width:12px;height:12px"></i> BATAL KLAIM
                   </button>
                 `}
@@ -948,6 +971,13 @@
           <i data-lucide="upload-cloud" style="width:14px;height:14px"></i> Kumpulkan Hasil
         </button>
       `;
+      if (isDoing) {
+        actionButtons += `
+          <button type="button" class="secondary" data-detail-act="cancel-claim" data-id="${task.id}" style="color:#b91c1c;border-color:#b91c1c;background:#fff2f2" title="Batalkan klaim tugas ini">
+            <i data-lucide="x" style="width:13px;height:13px"></i> Batal Klaim
+          </button>
+        `;
+      }
     }
 
     $('detail-modal-footer').innerHTML = `
@@ -979,6 +1009,26 @@
           render();
           showToast(`Tugas #${task.id} (${task.title}) berhasil diklaim! ⚡`);
         }
+      });
+    }
+
+    const detailCancelBtn = $('detail-modal-footer').querySelector('[data-detail-act="cancel-claim"]');
+    if (detailCancelBtn) {
+      detailCancelBtn.addEventListener('click', async () => {
+        closeTaskDetailModal();
+        const canCancel = confirm(`Batalkan klaim tugas #${task.id} (${task.title})?\nStatus tugas akan dikembalikan menjadi Available.`);
+        if (!canCancel) return;
+        const res = await API.updateStatus(task.id, 'open', currentUser);
+        if (res && res.success === false) {
+          alert(res.message || 'Gagal membatalkan klaim tugas.');
+          return;
+        }
+        task.status = 'open';
+        task.claimedBy = '';
+        saveLocalBackup();
+        render();
+        const canceledBy = isReihan() && !isMine ? 'Reihan' : currentUser;
+        showToast(`Klaim tugas #${task.id} dibatalkan oleh ${canceledBy} (Available kembali).`, '↩');
       });
     }
 
@@ -1226,6 +1276,13 @@
     if (tasksView) tasksView.style.display = 'none';
     if (profileView) profileView.style.display = 'block';
 
+    // Jika membuka profil sendiri, tombol "Profil Saya" menjadi aktif (oranye) dan "Tugas Saya" non-aktif
+    if (currentUser && memberName.toLowerCase() === currentUser.toLowerCase()) {
+      updateNavButtons('profile');
+    } else {
+      updateNavButtons('none');
+    }
+
     renderMemberProfile(activeProfileMember);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     refreshIcons();
@@ -1236,6 +1293,14 @@
     const profileView = $('view-profile-container');
     if (tasksView) tasksView.style.display = 'block';
     if (profileView) profileView.style.display = 'none';
+
+    // Jika filter tugas saat ini adalah currentUser, tombol "Tugas Saya" aktif
+    if (currentUser && activeMemberFilter && activeMemberFilter.toLowerCase() === currentUser.toLowerCase()) {
+      updateNavButtons('my-tasks');
+    } else {
+      updateNavButtons('none');
+    }
+
     render();
     window.scrollTo({ top: 0, behavior: 'smooth' });
     refreshIcons();
@@ -1423,12 +1488,10 @@
                     <span>Tandai Selesai</span>
                   </button>
                 ` : ''}
-                ${isReihan() ? `
-                  <button type="button" class="secondary" data-profile-act="cancel-claim" data-id="${t.id}" style="padding:7px 10px;font-size:11px;color:#991b1b" title="Batalkan klaim tugas ini (Khusus Reihan)">
-                    <i data-lucide="x" style="width:12px;height:12px"></i>
-                    <span>Batal Klaim (Reihan)</span>
-                  </button>
-                ` : ''}
+                <button type="button" class="secondary" data-profile-act="cancel-claim" data-id="${t.id}" style="padding:7px 10px;font-size:11px;color:#991b1b;background:#fff2f2;border-color:#b91c1c" title="Batalkan klaim tugas #${t.id}">
+                  <i data-lucide="x" style="width:12px;height:12px"></i>
+                  <span>Batal Klaim${isReihan() && !isOwnProfile ? ' (Reihan)' : ''}</span>
+                </button>
               </div>
             ` : `
               <div style="font-size:11px;font-weight:800;color:#555;padding-top:6px;border-top:1px dashed #ccc;display:flex;align-items:center;gap:4px">
@@ -1691,22 +1754,32 @@
 
         if (act === 'cancel-claim') {
           if (!currentUser) {
-            alert('Akses Dibatasi: Silakan login terlebih dahulu. Hanya Reihan (Project Lead) yang berwenang membatalkan klaim tugas!');
-            openLoginModal();
+            alert('Akses Dibatasi: Silakan login terlebih dahulu untuk membatalkan klaim tugas!');
+            openLoginModal(memberName);
             return;
           }
-          if (!isReihan()) {
-            alert('Akses Dibatasi: Hanya Reihan (Project Lead) yang memiliki wewenang untuk membatalkan klaim tugas!');
+
+          const isOwner = task.owner && task.owner.toLowerCase() === currentUser.toLowerCase();
+          if (!isOwner && !isReihan()) {
+            alert(`Akses Dibatasi: Tugas #${task.id} adalah milik ${task.owner}. Hanya ${task.owner} atau Reihan yang memiliki wewenang untuk membatalkan klaim tugas!`);
             return;
           }
 
           const ok = confirm(`Batalkan klaim tugas #${taskId}? Status akan kembali menjadi Available.`);
           if (!ok) return;
-          await API.updateStatus(taskId, 'open');
+
+          const res = await API.updateStatus(taskId, 'open', currentUser);
+          if (res && res.success === false) {
+            alert(res.message || 'Gagal membatalkan klaim tugas.');
+            return;
+          }
+
           task.status = 'open';
+          task.claimedBy = '';
           saveLocalBackup();
           renderMemberProfile(memberName);
-          showToast(`Klaim tugas #${taskId} dibatalkan oleh Reihan.`, '↩');
+          const canceledBy = isReihan() && !isOwner ? 'Reihan' : currentUser;
+          showToast(`Klaim tugas #${taskId} dibatalkan oleh ${canceledBy}.`, '↩');
           return;
         }
       });
@@ -1934,13 +2007,24 @@
     });
 
     $('btn-my-tasks').addEventListener('click', () => {
-      if (!currentUser) return;
+      if (!currentUser) {
+        openLoginModal();
+        return;
+      }
+      const tasksView = $('view-tasks-container');
+      const profileView = $('view-profile-container');
+      if (tasksView) tasksView.style.display = 'block';
+      if (profileView) profileView.style.display = 'none';
+
       activeMemberFilter = currentUser;
       document.querySelectorAll('#member-filters .filter').forEach(f => {
         f.classList.toggle('active', f.dataset.member === currentUser);
       });
+      updateNavButtons('my-tasks');
       render();
       showToast(`Menampilkan tugas milik ${currentUser} ⭐`);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      refreshIcons();
     });
 
     // Dedicated Profile Navigation
@@ -2239,6 +2323,7 @@
       if (member === 'all') {
         activeMemberFilter = 'all';
         document.querySelectorAll('#member-filters .filter').forEach(f => f.classList.toggle('active', f === btn));
+        updateNavButtons('none');
         render();
         showToast('Menampilkan semua jobdesk tim.');
       } else {
@@ -2310,23 +2395,32 @@
 
         if (act === 'cancel-claim') {
           if (!currentUser) {
-            alert('Akses Dibatasi: Silakan login terlebih dahulu. Hanya Reihan (Project Lead) yang memiliki izin untuk membatalkan klaim tugas!');
-            openLoginModal();
+            alert('Akses Dibatasi: Silakan login terlebih dahulu untuk membatalkan klaim tugas!');
+            openLoginModal(task.owner || '');
             return;
           }
-          if (!isReihan()) {
-            alert('Akses Dibatasi: Hanya Reihan (Project Lead) yang memiliki wewenang untuk membatalkan klaim tugas!');
+
+          const isOwner = task.owner && task.owner.toLowerCase() === currentUser.toLowerCase();
+          if (!isOwner && !isReihan()) {
+            alert(`Akses Dibatasi: Tugas #${task.id} adalah milik ${task.owner}. Hanya ${task.owner} atau Reihan yang memiliki wewenang untuk membatalkan klaim tugas!`);
             return;
           }
 
           const canCancel = confirm(`Batalkan klaim tugas #${taskId} (${task.title})?\nStatus tugas akan dikembalikan menjadi Available.`);
           if (!canCancel) return;
 
-          await API.updateStatus(taskId, 'open');
+          const res = await API.updateStatus(taskId, 'open', currentUser);
+          if (res && res.success === false) {
+            alert(res.message || 'Gagal membatalkan klaim tugas.');
+            return;
+          }
+
           task.status = 'open';
+          task.claimedBy = '';
           saveLocalBackup();
           render();
-          showToast(`Klaim tugas #${taskId} dibatalkan oleh Reihan (Available kembali).`, '↩');
+          const canceledBy = isReihan() && !isOwner ? 'Reihan' : currentUser;
+          showToast(`Klaim tugas #${taskId} dibatalkan oleh ${canceledBy} (Available kembali).`, '↩');
           return;
         }
 
