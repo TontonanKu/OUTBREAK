@@ -741,13 +741,25 @@
                 <button class="taskbtn" data-act="mark-done" data-id="${t.id}" title="Tandai selesai">
                   <i data-lucide="check" style="width:12px;height:12px"></i> SELESAI
                 </button>
-                <button class="taskbtn" data-act="cancel-claim" data-id="${t.id}" title="Batalkan klaim tugas ini (kembali ke Available)" style="background:#fff2f2;color:#b91c1c;border-color:#b91c1c">
-                  <i data-lucide="x" style="width:12px;height:12px"></i> BATAL KLAIM
-                </button>
+                ${isReihan() ? `
+                  <button class="taskbtn" data-act="cancel-claim" data-id="${t.id}" title="Batalkan klaim tugas ini (Khusus Reihan)" style="background:#fff2f2;color:#b91c1c;border-color:#b91c1c">
+                    <i data-lucide="x" style="width:12px;height:12px"></i> BATAL KLAIM
+                  </button>
+                ` : `
+                  <button class="taskbtn" data-act="cancel-claim" data-id="${t.id}" title="Hanya Reihan yang berwenang membatalkan klaim" style="color:#777;background:#f3f4f6">
+                    <i data-lucide="lock" style="width:12px;height:12px"></i> BATAL KLAIM
+                  </button>
+                `}
               ` : `
-                <button class="taskbtn" data-act="reopen" data-id="${t.id}">
-                  <i data-lucide="rotate-ccw" style="width:12px;height:12px"></i> BUKA LAGI
-                </button>
+                ${isReihan() ? `
+                  <button class="taskbtn" data-act="reopen" data-id="${t.id}" title="Buka kembali tugas (Khusus Reihan)">
+                    <i data-lucide="rotate-ccw" style="width:12px;height:12px"></i> BUKA LAGI
+                  </button>
+                ` : `
+                  <button class="taskbtn" data-act="reopen" data-id="${t.id}" title="Hanya Reihan yang berwenang membuka kembali tugas" style="color:#777;background:#f3f4f6">
+                    <i data-lucide="lock" style="width:12px;height:12px"></i> BUKA LAGI
+                  </button>
+                `}
               `}
 
               ${isReihan() ? `
@@ -755,7 +767,7 @@
                   <i data-lucide="edit-2" style="width:12px;height:12px"></i> EDIT
                 </button>
               ` : `
-                <button class="taskbtn" data-act="edit" data-id="${t.id}" title="Hanya Reihan yang berwenang mengedit jobdesk" style="color:#666">
+                <button class="taskbtn" data-act="edit" data-id="${t.id}" title="Hanya Reihan yang berwenang mengedit jobdesk" style="color:#777;background:#f3f4f6">
                   <i data-lucide="lock" style="width:12px;height:12px"></i> EDIT
                 </button>
               `}
@@ -1399,19 +1411,24 @@
               </div>
             ` : ''}
 
-            ${isOwnProfile ? `
+            ${isOwnProfile || isReihan() ? `
               <div class="claimed-task-actions">
-                <button type="button" class="primary" data-profile-act="submit-task" data-id="${t.id}" style="padding:7px 12px;font-size:11px">
-                  <i data-lucide="upload-cloud" style="width:12px;height:12px"></i>
-                  <span>Kumpulkan Hasil</span>
-                </button>
-                <button type="button" class="secondary" data-profile-act="mark-done" data-id="${t.id}" style="padding:7px 12px;font-size:11px">
-                  <i data-lucide="check" style="width:12px;height:12px"></i>
-                  <span>Tandai Selesai</span>
-                </button>
-                <button type="button" class="secondary" data-profile-act="cancel-claim" data-id="${t.id}" style="padding:7px 10px;font-size:11px;color:#991b1b">
-                  <span>Batal Klaim</span>
-                </button>
+                ${isOwnProfile ? `
+                  <button type="button" class="primary" data-profile-act="submit-task" data-id="${t.id}" style="padding:7px 12px;font-size:11px">
+                    <i data-lucide="upload-cloud" style="width:12px;height:12px"></i>
+                    <span>Kumpulkan Hasil</span>
+                  </button>
+                  <button type="button" class="secondary" data-profile-act="mark-done" data-id="${t.id}" style="padding:7px 12px;font-size:11px">
+                    <i data-lucide="check" style="width:12px;height:12px"></i>
+                    <span>Tandai Selesai</span>
+                  </button>
+                ` : ''}
+                ${isReihan() ? `
+                  <button type="button" class="secondary" data-profile-act="cancel-claim" data-id="${t.id}" style="padding:7px 10px;font-size:11px;color:#991b1b" title="Batalkan klaim tugas ini (Khusus Reihan)">
+                    <i data-lucide="x" style="width:12px;height:12px"></i>
+                    <span>Batal Klaim (Reihan)</span>
+                  </button>
+                ` : ''}
               </div>
             ` : `
               <div style="font-size:11px;font-weight:800;color:#555;padding-top:6px;border-top:1px dashed #ccc;display:flex;align-items:center;gap:4px">
@@ -1673,13 +1690,23 @@
         }
 
         if (act === 'cancel-claim') {
+          if (!currentUser) {
+            alert('Akses Dibatasi: Silakan login terlebih dahulu. Hanya Reihan (Project Lead) yang berwenang membatalkan klaim tugas!');
+            openLoginModal();
+            return;
+          }
+          if (!isReihan()) {
+            alert('Akses Dibatasi: Hanya Reihan (Project Lead) yang memiliki wewenang untuk membatalkan klaim tugas!');
+            return;
+          }
+
           const ok = confirm(`Batalkan klaim tugas #${taskId}? Status akan kembali menjadi Available.`);
           if (!ok) return;
           await API.updateStatus(taskId, 'open');
           task.status = 'open';
           saveLocalBackup();
           renderMemberProfile(memberName);
-          showToast(`Klaim tugas #${taskId} dibatalkan.`, '↩');
+          showToast(`Klaim tugas #${taskId} dibatalkan oleh Reihan.`, '↩');
           return;
         }
       });
@@ -2282,6 +2309,16 @@
         }
 
         if (act === 'cancel-claim') {
+          if (!currentUser) {
+            alert('Akses Dibatasi: Silakan login terlebih dahulu. Hanya Reihan (Project Lead) yang memiliki izin untuk membatalkan klaim tugas!');
+            openLoginModal();
+            return;
+          }
+          if (!isReihan()) {
+            alert('Akses Dibatasi: Hanya Reihan (Project Lead) yang memiliki wewenang untuk membatalkan klaim tugas!');
+            return;
+          }
+
           const canCancel = confirm(`Batalkan klaim tugas #${taskId} (${task.title})?\nStatus tugas akan dikembalikan menjadi Available.`);
           if (!canCancel) return;
 
@@ -2289,11 +2326,23 @@
           task.status = 'open';
           saveLocalBackup();
           render();
-          showToast(`Klaim tugas #${taskId} dibatalkan (Available kembali).`, '↩');
+          showToast(`Klaim tugas #${taskId} dibatalkan oleh Reihan (Available kembali).`, '↩');
           return;
         }
 
         if (act === 'mark-done') {
+          if (!currentUser) {
+            alert('Akses Dibatasi: Silakan login terlebih dahulu untuk menandai tugas ini selesai.');
+            openLoginModal(task.owner || '');
+            return;
+          }
+
+          const isOwner = task.owner && task.owner.toLowerCase() === currentUser.toLowerCase();
+          if (!isOwner && !isReihan()) {
+            alert(`Akses Dibatasi: Tugas #${task.id} adalah milik ${task.owner}. Hanya ${task.owner} atau Reihan yang dapat menandai tugas ini selesai!`);
+            return;
+          }
+
           if (!task.submissionLink && !task.fileMeta) {
             const want = confirm('Tugas ini belum memiliki tautan Drive atau file ZIP. Buka form pengumpulan sekarang?');
             if (want) {
@@ -2310,11 +2359,21 @@
         }
 
         if (act === 'reopen') {
+          if (!currentUser) {
+            alert('Akses Dibatasi: Silakan login terlebih dahulu. Hanya Reihan (Project Lead) yang berwenang membuka kembali tugas!');
+            openLoginModal();
+            return;
+          }
+          if (!isReihan()) {
+            alert('Akses Dibatasi: Hanya Reihan (Project Lead) yang memiliki wewenang untuk membuka kembali tugas yang sudah selesai!');
+            return;
+          }
+
           await API.updateStatus(taskId, 'doing');
           task.status = 'doing';
           saveLocalBackup();
           render();
-          showToast(`Tugas #${taskId} dibuka kembali.`);
+          showToast(`Tugas #${taskId} dibuka kembali oleh Reihan.`);
           return;
         }
       }

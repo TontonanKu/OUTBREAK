@@ -140,7 +140,7 @@ app.post('/api/tasks/:id/claim', (req, res) => {
 // 4. Update Status (open, doing, done)
 app.post('/api/tasks/:id/status', (req, res) => {
   const id = Number(req.params.id);
-  const { status } = req.body;
+  const { status, user } = req.body;
   if (!['open', 'doing', 'done'].includes(status)) {
     return res.status(400).json({ success: false, message: 'Status tidak valid.' });
   }
@@ -148,6 +148,11 @@ app.post('/api/tasks/:id/status', (req, res) => {
   const tasks = readTasks();
   const task = tasks.find(t => t.id === id);
   if (!task) return res.status(404).json({ success: false, message: 'Tugas tidak ditemukan.' });
+
+  // Hanya Reihan yang memiliki otoritas untuk membatalkan klaim (status 'open') atau membuka kembali tugas
+  if ((status === 'open' || (task.status === 'done' && status === 'doing')) && (!user || user.toLowerCase() !== 'reihan')) {
+    return res.status(403).json({ success: false, message: 'Akses Dibatasi: Hanya Reihan (Project Lead) yang berwenang membatalkan klaim atau membuka kembali tugas!' });
+  }
 
   task.status = status;
   writeTasks(tasks);

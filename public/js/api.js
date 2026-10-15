@@ -85,7 +85,15 @@ const API = {
     return { success: true };
   },
 
-  async updateStatus(taskId, status) {
+  async updateStatus(taskId, status, user = null) {
+    if (!user) {
+      user = localStorage.getItem('rrby_outbreak_current_user') || '';
+    }
+    // Hanya Reihan yang berwenang membatalkan klaim (status 'open')
+    if (status === 'open' && (!user || user.toLowerCase() !== 'reihan')) {
+      return { success: false, message: 'Akses Dibatasi: Hanya Reihan yang berwenang membatalkan klaim tugas!' };
+    }
+
     let tasks = await this.getTasks();
     if (!tasks) return { success: false };
     const task = tasks.find(t => t.id === taskId);
