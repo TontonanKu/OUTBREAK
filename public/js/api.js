@@ -178,77 +178,74 @@ const API = {
       }
     }
 
-    // 2. Unggah ke Google Firebase Cloud Storage
-    if (!initFirebaseApp()) {
-      return {
-        success: false,
-        error: 'Firebase SDK belum terhubung. Pastikan browser terhubung ke internet.'
-      };
-    }
+    // 2. Cloud Upload via GoFile API (100% Gratis, Tanpa Akun, Tanpa Kartu Kredit)
+    try {
+      let server = 'store3';
+      try {
+        const sRes = await fetch('https://api.gofile.io/servers');
+        if (sRes.ok) {
+          const sData = await sRes.json();
+          if (sData && sData.data && sData.data.servers && sData.data.servers.length) {
+            server = sData.data.servers[0].name;
+          }
+        }
+      } catch (e) {
+        console.warn('Gofile server lookup fallback:', e);
+      }
 
-    const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-    const storagePath = `submissions/${Date.now()}_${cleanName}`;
+      const uploadUrl = `https://${server}.gofile.io/contents/uploadfile`;
 
-    const tryUploadToBucket = (bucketName) => {
-      return new Promise((resolve, reject) => {
-        try {
-          const storage = firebase.app().storage(`gs://${bucketName}`);
-          const ref = storage.ref(storagePath);
-          const uploadTask = ref.put(file, {
-            contentType: file.type || 'application/octet-stream',
-            customMetadata: {
-              originalName: file.name,
-              uploadedAt: new Date().toISOString()
+      return await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', uploadUrl);
+
+        if (xhr.upload && typeof onProgress === 'function') {
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable && e.total > 0) {
+              const percent = Math.round((e.loaded / e.total) * 100);
+              onProgress({ percent, bytesTransferred: e.loaded, totalBytes: e.total });
             }
-          });
+          };
+        }
 
-          uploadTask.on(
-            'state_changed',
-            (snapshot) => {
-              if (snapshot.totalBytes > 0 && typeof onProgress === 'function') {
-                const percent = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-                onProgress({ percent, bytesTransferred: snapshot.bytesTransferred, totalBytes: snapshot.totalBytes });
-              }
-            },
-            (err) => reject(err),
-            async () => {
-              try {
-                const downloadUrl = await uploadTask.snapshot.ref.getDownloadURL();
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const res = JSON.parse(xhr.responseText);
+              if (res && res.status === 'ok' && res.data && res.data.downloadPage) {
                 resolve({
                   success: true,
-                  downloadUrl,
+                  downloadUrl: res.data.downloadPage,
                   name: file.name,
-                  storedPath: storagePath,
-                  bucket: bucketName,
+                  storedPath: res.data.code || '',
                   size: formatBytes(file.size),
                   sizeBytes: file.size,
                   uploadedAt: new Date().toLocaleString('id-ID')
                 });
-              } catch (e) {
-                reject(e);
+                return;
               }
+            } catch (err) {
+              reject(err);
+              return;
             }
-          );
-        } catch (e) {
-          reject(e);
-        }
-      });
-    };
-
-    try {
-      return await tryUploadToBucket(FIREBASE_STORAGE_BUCKET);
-    } catch (err) {
-      console.warn(`Upload ke ${FIREBASE_STORAGE_BUCKET} gagal, mencoba bucket cadangan...`, err);
-      try {
-        return await tryUploadToBucket(FIREBASE_STORAGE_BUCKET_FALLBACK);
-      } catch (err2) {
-        console.error('Semua bucket Firebase Storage gagal:', err2);
-        return {
-          success: false,
-          error: err2.message || 'Gagal mengunggah file ke Firebase Storage.',
-          code: err2.code || err.code || 'storage/error'
+          }
+          reject(new Error(`Server upload merespons status: ${xhr.status}`));
         };
-      }
+
+        xhr.onerror = () => reject(new Error('Koneksi upload jaringan terputus'));
+        xhr.ontimeout = () => reject(new Error('Upload timeout (terlalu lama)'));
+
+        const fd = new FormData();
+        fd.append('file', file);
+        xhr.send(fd);
+      });
+    } catch (cloudErr) {
+      console.error('Cloud storage upload error:', cloudErr);
+      return {
+        success: false,
+        error: cloudErr.message || 'Gagal mengunggah file ke cloud storage.',
+        code: 'upload_failed'
+      };
     }
   },
 

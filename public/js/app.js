@@ -2234,9 +2234,9 @@
       if (!res.success) {
         if (res.storageError) {
           const proceedWithoutFile = confirm(
-            `⚠️ GAGAL MENGUNGGAH FILE KE CLOUD STORAGE:\n` +
+            `⚠️ GAGAL MENGUNGGAH FILE KE CLOUD:\n` +
             `${res.error}\n\n` +
-            `👉 Hal ini terjadi jika Firebase Storage belum diaktifkan di console Firebase.\n` +
+            `👉 Kamu bisa memasukkan tautan Google Drive file aset kamu di kolom Link Hasil Tugas.\n` +
             `Apakah ingin tetap mengumpulkan tugas dengan Link Google Drive / Catatan saja tanpa melampirkan file fisik?`
           );
           if (proceedWithoutFile) {
