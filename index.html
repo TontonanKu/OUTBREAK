@@ -108,11 +108,28 @@
     </button>
   </div>
 
-  <!-- HERO SECTION (NEO-BRUTALIST) -->
-  <section class="hero">
-    <div>
-      <div class="eyebrow">✳ OUTBREAK 2D ZOMBIE SURVIVAL — REVISI PASCA KONSULTASI DOSEN</div>
-      <h1>GET IT<br><span>DONE.</span></h1>
+  <!-- MAIN VIEW SWITCHER TABS (In-Page Navigation) -->
+  <div class="main-view-switcher" id="main-view-switcher">
+    <button type="button" class="view-switch-btn active" id="btn-view-tasks" data-view="tasks">
+      <i data-lucide="layout-grid" style="width:15px;height:15px"></i>
+      <span>📋 DAFTAR JOBDESK TIM (9)</span>
+    </button>
+    <button type="button" class="view-switch-btn" id="btn-view-profile" data-view="profile">
+      <i data-lucide="user-check" style="width:15px;height:15px"></i>
+      <span>📸 PROFIL ANGGOTA &amp; PROGRES HARIAN</span>
+      <span class="feed-count-badge" id="feed-count-badge">0</span>
+    </button>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- VIEW 1: JOBDESK DASHBOARD                  -->
+  <!-- ========================================== -->
+  <div id="view-tasks-container">
+    <!-- HERO SECTION (NEO-BRUTALIST) -->
+    <section class="hero">
+      <div>
+        <div class="eyebrow">✳ OUTBREAK 2D ZOMBIE SURVIVAL — REVISI PASCA KONSULTASI DOSEN</div>
+        <h1>GET IT<br><span>DONE.</span></h1>
       <div class="sub">
         Setiap tugas sudah dibagi perorangan dengan nama agar tidak salah ambil. Jika sudah selesai, silakan kumpulkan hasil berupa tautan Google Drive / link Figma atau drag langsung file ZIP hasil pekerjaan.
       </div>
@@ -220,6 +237,55 @@
       <span>100% READY</span>
     </div>
   </section>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- VIEW 2: PROFIL ANGGOTA & LOG PROGRES       -->
+  <!-- ========================================== -->
+  <div id="view-profile-container" style="display:none">
+    <div class="profile-inpage-header">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+        <div>
+          <div class="eyebrow" style="color:var(--orange)">MEMBER PROFILE &amp; DAILY PROGRESS LOG</div>
+          <h2 style="font-size:28px;font-weight:900;margin:4px 0 0;letter-spacing:-1px">PROFIL &amp; LOG PROGRES HARIAN.</h2>
+          <div style="font-size:12px;color:#555;font-weight:700;margin-top:4px">
+            Pantau status jobdesk yang diklaim dan preview progres screenshot harian tim Outbreak.
+          </div>
+        </div>
+        <button type="button" class="secondary" id="btn-back-to-tasks" style="padding:9px 16px;font-size:12px;font-weight:900">
+          <i data-lucide="arrow-left" style="width:14px;height:14px"></i>
+          <span>Kembali ke Daftar Jobdesk</span>
+        </button>
+      </div>
+
+      <!-- In-Page Member Selector Tabs -->
+      <div class="profile-tabs-bar" id="profile-tabs-bar">
+        <button type="button" class="profile-tab active" data-tab="feed">
+          <i data-lucide="globe" style="width:14px;height:14px"></i>
+          <span>🌐 Semua Feed Tim</span>
+        </button>
+        <button type="button" class="profile-tab" data-tab="Reihan">
+          <i data-lucide="laptop" style="width:13px;height:13px"></i>
+          <span>Reihan</span>
+        </button>
+        <button type="button" class="profile-tab" data-tab="Bintang">
+          <i data-lucide="palette" style="width:13px;height:13px"></i>
+          <span>Bintang</span>
+        </button>
+        <button type="button" class="profile-tab" data-tab="Royan">
+          <i data-lucide="shield" style="width:13px;height:13px"></i>
+          <span>Royan</span>
+        </button>
+        <button type="button" class="profile-tab" data-tab="Eby">
+          <i data-lucide="skull" style="width:13px;height:13px"></i>
+          <span>Eby</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- In-Page Profile Body (Rendered Dynamically by JS) -->
+    <div id="profile-inpage-body"></div>
+  </div>
 
   <!-- FOOTER -->
   <footer class="bottom">
@@ -539,51 +605,6 @@
         <span>UJI KONEKSI SEKARANG</span>
       </button>
       <button type="button" class="primary" id="btn-close-sync">TUTUP</button>
-    </div>
-  </div>
-</div>
-
-<!-- ========================================== -->
-<!-- MODAL: PROFIL ANGGOTA & FEED PROGRES TIM   -->
-<!-- ========================================== -->
-<div class="modalback" id="modal-profile-wrap">
-  <div class="modal modal-large" style="width:min(800px, 98%);max-height:94vh;display:flex;flex-direction:column;padding:0;overflow:hidden">
-    <!-- Header -->
-    <div style="background:var(--ink);color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid var(--ink);flex-shrink:0">
-      <div>
-        <div class="eyebrow" style="color:var(--yellow);font-size:10px;margin-bottom:2px">MEMBER PROFILE &amp; DAILY PROGRESS LOG</div>
-        <h2 style="color:#fff;margin:0;font-size:20px;letter-spacing:-0.5px" id="profile-modal-title">PROFIL &amp; LOG PROGRES HARIAN</h2>
-      </div>
-      <button type="button" id="btn-close-profile" style="background:var(--orange);border:2px solid var(--ink);color:#fff;width:34px;height:34px;font-weight:900;font-size:16px;cursor:pointer;display:grid;place-items:center;box-shadow:2px 2px 0 var(--ink)">✕</button>
-    </div>
-
-    <!-- Member Filter Tabs -->
-    <div class="profile-tabs-bar" id="profile-tabs-bar" style="background:var(--yellow);border-bottom:2.5px solid var(--ink);padding:8px 12px;display:flex;gap:6px;overflow-x:auto;align-items:center;flex-shrink:0">
-      <button type="button" class="profile-tab active" data-tab="feed">
-        <i data-lucide="globe" style="width:13px;height:13px"></i>
-        <span>🌐 Semua Feed Tim</span>
-      </button>
-      <button type="button" class="profile-tab" data-tab="Reihan">
-        <i data-lucide="laptop" style="width:13px;height:13px"></i>
-        <span>Reihan</span>
-      </button>
-      <button type="button" class="profile-tab" data-tab="Bintang">
-        <i data-lucide="palette" style="width:13px;height:13px"></i>
-        <span>Bintang</span>
-      </button>
-      <button type="button" class="profile-tab" data-tab="Royan">
-        <i data-lucide="shield" style="width:13px;height:13px"></i>
-        <span>Royan</span>
-      </button>
-      <button type="button" class="profile-tab" data-tab="Eby">
-        <i data-lucide="skull" style="width:13px;height:13px"></i>
-        <span>Eby</span>
-      </button>
-    </div>
-
-    <!-- Scrollable Content Body -->
-    <div style="overflow-y:auto;padding:18px;flex:1;background:var(--paper)" id="profile-modal-body">
-      <!-- Dynamic Content Rendered by JS -->
     </div>
   </div>
 </div>

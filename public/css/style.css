@@ -1105,8 +1105,60 @@ h1 span {
 }
 
 /* ====================================================
-   9. MEMBER PROFILE & DAILY PROGRESS FEED (NEO-BRUTALIST)
+   9. IN-PAGE VIEW SWITCHER & PROFILE SYSTEM (NEO-BRUTALIST)
    ==================================================== */
+.main-view-switcher {
+  display: flex;
+  gap: 10px;
+  margin: 16px 0 22px;
+  flex-wrap: wrap;
+}
+
+.view-switch-btn {
+  background: #fff;
+  border: 2.5px solid var(--ink);
+  padding: 11px 18px;
+  font-size: 13px;
+  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 3.5px 3.5px 0 var(--ink);
+  cursor: pointer;
+  transition: all 0.1s ease;
+  letter-spacing: 0.3px;
+}
+
+.view-switch-btn:hover {
+  background: var(--yellow);
+  transform: translate(-1px, -1px);
+  box-shadow: 4.5px 4.5px 0 var(--ink);
+}
+
+.view-switch-btn.active {
+  background: var(--ink);
+  color: #fff;
+  box-shadow: 4px 4px 0 var(--orange);
+}
+
+.view-switch-btn.active i {
+  color: var(--yellow);
+}
+
+.profile-inpage-header {
+  background: #fff;
+  border: 2.5px solid var(--ink);
+  box-shadow: 4px 4px 0 var(--ink);
+  padding: 20px 22px;
+  margin-bottom: 20px;
+}
+
+.profile-inpage-header .profile-tabs-bar {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 2px solid #eee;
+}
+
 .feed-count-badge {
   background: var(--orange);
   color: #fff;
@@ -1603,6 +1655,23 @@ h1 span {
 
   .link-badge.reset {
     margin-left: 0;
+  }
+
+  /* Main View Switcher Mobile */
+  .main-view-switcher {
+    gap: 8px;
+    margin: 12px 0 16px;
+  }
+  .view-switch-btn {
+    flex: 1;
+    min-width: 135px;
+    padding: 9px 10px;
+    font-size: 11px;
+    justify-content: center;
+    box-shadow: 2.5px 2.5px 0 var(--ink);
+  }
+  .profile-inpage-header {
+    padding: 14px;
   }
 }
 

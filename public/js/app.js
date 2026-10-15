@@ -312,7 +312,7 @@
         if (remoteUpdates) {
           progressUpdates = remoteUpdates;
           updateFeedBadge();
-          if ($('modal-profile-wrap') && $('modal-profile-wrap').classList.contains('show')) {
+          if ($('view-profile-container') && $('view-profile-container').style.display !== 'none') {
             renderProfileContent();
           }
           console.log('📸 Realtime progress update received from Firebase!');
@@ -344,7 +344,7 @@
           if (latestProgs && latestProgs.length !== progressUpdates.length) {
             progressUpdates = latestProgs;
             updateFeedBadge();
-            if ($('modal-profile-wrap') && $('modal-profile-wrap').classList.contains('show')) {
+            if ($('view-profile-container') && $('view-profile-container').style.display !== 'none') {
               renderProfileContent();
             }
           }
@@ -791,23 +791,42 @@
     }
   }
 
-  function openProfileModal(tab = 'feed') {
+  function switchMainView(viewName) {
+    const tasksView = $('view-tasks-container');
+    const profileView = $('view-profile-container');
+    const btnTasks = $('btn-view-tasks');
+    const btnProfile = $('btn-view-profile');
+
+    if (viewName === 'profile') {
+      if (tasksView) tasksView.style.display = 'none';
+      if (profileView) profileView.style.display = 'block';
+      if (btnTasks) btnTasks.classList.remove('active');
+      if (btnProfile) btnProfile.classList.add('active');
+      renderProfileContent();
+    } else {
+      if (tasksView) tasksView.style.display = 'block';
+      if (profileView) profileView.style.display = 'none';
+      if (btnTasks) btnTasks.classList.add('active');
+      if (btnProfile) btnProfile.classList.remove('active');
+      render();
+    }
+    refreshIcons();
+  }
+
+  function openProfileView(tab = 'feed') {
     currentProfileTab = tab || (currentUser || 'feed');
     document.querySelectorAll('#profile-tabs-bar .profile-tab').forEach(b => {
       b.classList.toggle('active', b.dataset.tab === currentProfileTab);
     });
-    renderProfileContent();
-    $('modal-profile-wrap').classList.add('show');
-    refreshIcons();
-  }
-
-  function closeProfileModal() {
-    $('modal-profile-wrap').classList.remove('show');
-    stagedProgressImg = null;
+    switchMainView('profile');
+    const switcher = $('main-view-switcher');
+    if (switcher) {
+      switcher.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 
   function renderProfileContent() {
-    const container = $('profile-modal-body');
+    const container = $('profile-inpage-body');
     if (!container) return;
 
     if (currentProfileTab === 'feed') {
@@ -905,14 +924,13 @@
     const quickPostBtn = $('btn-quick-post-progress');
     if (quickPostBtn) {
       quickPostBtn.addEventListener('click', () => {
-        openProfileModal(currentUser);
+        openProfileView(currentUser);
       });
     }
 
     const feedLoginBtn = $('btn-feed-to-login');
     if (feedLoginBtn) {
       feedLoginBtn.addEventListener('click', () => {
-        closeProfileModal();
         openLoginModal();
       });
     }
@@ -1313,7 +1331,7 @@
     document.querySelectorAll('.member-pill[data-user]').forEach(pill => {
       pill.addEventListener('click', () => {
         if (currentUser) {
-          openProfileModal(pill.dataset.user);
+          openProfileView(pill.dataset.user);
         } else {
           openLoginModal(pill.dataset.user);
         }
@@ -1377,24 +1395,37 @@
       showToast(`Menampilkan tugas milik ${currentUser} ⭐`);
     });
 
+    // Main In-Page View Switcher
+    const btnViewTasks = $('btn-view-tasks');
+    if (btnViewTasks) {
+      btnViewTasks.addEventListener('click', () => switchMainView('tasks'));
+    }
+
+    const btnViewProfile = $('btn-view-profile');
+    if (btnViewProfile) {
+      btnViewProfile.addEventListener('click', () => {
+        openProfileView(currentProfileTab || (currentUser || 'feed'));
+      });
+    }
+
+    const btnBackToTasks = $('btn-back-to-tasks');
+    if (btnBackToTasks) {
+      btnBackToTasks.addEventListener('click', () => switchMainView('tasks'));
+    }
+
     // Profile & Team Feed Navigation
     const myProfileBtn = $('btn-open-my-profile');
     if (myProfileBtn) {
       myProfileBtn.addEventListener('click', () => {
-        openProfileModal(currentUser || 'feed');
+        openProfileView(currentUser || 'feed');
       });
     }
 
     const teamFeedBtn = $('btn-open-team-feed');
     if (teamFeedBtn) {
       teamFeedBtn.addEventListener('click', () => {
-        openProfileModal('feed');
+        openProfileView('feed');
       });
-    }
-
-    const closeProfileBtn = $('btn-close-profile');
-    if (closeProfileBtn) {
-      closeProfileBtn.addEventListener('click', closeProfileModal);
     }
 
     const closeLightboxBtn = $('btn-close-lightbox');
@@ -1422,10 +1453,10 @@
       });
     }
 
-    // Ctrl+V Paste handler for screenshot image upload into profile
+    // Ctrl+V Paste handler for screenshot image upload into in-page profile
     document.addEventListener('paste', async (e) => {
-      const modal = $('modal-profile-wrap');
-      if (!modal || !modal.classList.contains('show')) return;
+      const viewContainer = $('view-profile-container');
+      if (!viewContainer || viewContainer.style.display === 'none') return;
       if (e.clipboardData && e.clipboardData.items) {
         for (let item of e.clipboardData.items) {
           if (item.type && item.type.indexOf('image') !== -1) {
