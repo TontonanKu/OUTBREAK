@@ -145,6 +145,14 @@ const API = {
       };
     }
 
+    // Hanya Reihan atau pemilik tugas yang berwenang menandai tugas selesai
+    if (status === 'done' && !isReihanUser && !isTaskOwner) {
+      return { 
+        success: false, 
+        message: `Akses Dibatasi: Tugas #${task.id} adalah milik ${task.owner}. Hanya ${task.owner} atau Reihan yang berwenang menandai tugas ini selesai!` 
+      };
+    }
+
     task.status = status;
     if (status === 'open') {
       task.claimedBy = '';
@@ -264,6 +272,15 @@ const API = {
     const task = tasks.find(t => t.id === taskId);
     if (!task) return { success: false, message: 'Tugas tidak ditemukan.' };
 
+    const isOwner = task.owner && task.owner.toLowerCase() === currentUser.toLowerCase();
+    const isReihanUser = currentUser && currentUser.toLowerCase() === 'reihan';
+    if (!isOwner && !isReihanUser) {
+      return { 
+        success: false, 
+        message: `Akses Dibatasi: Tugas #${taskId} adalah milik ${task.owner}. Hanya ${task.owner} atau Reihan yang berwenang mengumpulkan hasil tugas ini!` 
+      };
+    }
+
     let owner = '', link = '', notes = '', status = 'done', fileMeta = null;
     let fileToUpload = null;
 
@@ -311,7 +328,9 @@ const API = {
       }
     }
 
-    task.owner = owner;
+    // Pertahankan pemilik asli tugas (jangan timpa alokasi jobdesk resmi)
+    if (!task.owner) task.owner = owner;
+    task.submittedBy = currentUser;
     if (link !== undefined) task.submissionLink = link;
     if (notes !== undefined) task.notes = notes;
     task.status = status;
@@ -485,6 +504,18 @@ const API = {
   },
 
   async deleteProgressUpdate(updateId) {
+    // Bersihkan dari cache localStorage juga agar tidak muncul kembali
+    try {
+      const local = localStorage.getItem('rrby_outbreak_progress_updates');
+      if (local) {
+        let cached = JSON.parse(local);
+        if (Array.isArray(cached)) {
+          cached = cached.filter(p => p && p.id !== updateId);
+          localStorage.setItem('rrby_outbreak_progress_updates', JSON.stringify(cached));
+        }
+      }
+    } catch (e) {}
+
     try {
       const res = await fetch(`${FIREBASE_DB_URL}/progress_updates/${updateId}.json`, {
         method: 'DELETE'
@@ -502,7 +533,7 @@ const API = {
     }
     try {
       this.eventSource = new EventSource(`${FIREBASE_DB_URL}/tasks.json`);
-      this.eventSource.addEventListener('put', async (e) => {
+      const handleTasksEvent = async (e) => {
         try {
           const parsed = JSON.parse(e.data);
           if (parsed && Array.isArray(parsed.data)) {
@@ -516,7 +547,10 @@ const API = {
         } catch (err) {
           console.warn('Realtime parse event error', err);
         }
-      });
+      };
+
+      this.eventSource.addEventListener('put', handleTasksEvent);
+      this.eventSource.addEventListener('patch', handleTasksEvent);
       this.eventSource.onerror = () => {
         // Handled by browser auto-reconnect
       };
@@ -530,10 +564,12 @@ const API = {
           try { this.progressEventSource.close(); } catch (e) {}
         }
         this.progressEventSource = new EventSource(`${FIREBASE_DB_URL}/progress_updates.json`);
-        this.progressEventSource.addEventListener('put', async () => {
+        const handleProgEvent = async () => {
           const updates = await this.getProgressUpdates();
           if (typeof onProgressUpdate === 'function') onProgressUpdate(updates);
-        });
+        };
+        this.progressEventSource.addEventListener('put', handleProgEvent);
+        this.progressEventSource.addEventListener('patch', handleProgEvent);
       } catch (e) {
         console.warn('Progress EventSource failed', e);
       }

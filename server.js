@@ -168,6 +168,14 @@ app.post('/api/tasks/:id/status', (req, res) => {
     });
   }
 
+  // Hanya Reihan atau pemilik tugas yang berwenang menandai tugas selesai
+  if (status === 'done' && !isReihanUser && !isTaskOwner) {
+    return res.status(403).json({ 
+      success: false, 
+      message: `Akses Dibatasi: Tugas #${task.id} adalah milik ${task.owner}. Hanya ${task.owner} atau Reihan yang berwenang menandai tugas ini selesai!` 
+    });
+  }
+
   task.status = status;
   if (status === 'open') {
     task.claimedBy = '';
@@ -194,7 +202,18 @@ app.post('/api/tasks/:id/submit', upload.single('file'), (req, res) => {
   const task = tasks.find(t => t.id === id);
   if (!task) return res.status(404).json({ success: false, message: 'Tugas tidak ditemukan.' });
 
-  task.owner = owner;
+  const isOwner = task.owner && task.owner.toLowerCase() === owner.toLowerCase();
+  const isReihanUser = owner.toLowerCase() === 'reihan';
+  if (!isOwner && !isReihanUser) {
+    return res.status(403).json({
+      success: false,
+      message: `Akses Ditolak: Tugas #${id} adalah milik ${task.owner}. Hanya ${task.owner} atau Reihan yang berwenang mengumpulkan hasil tugas ini!`
+    });
+  }
+
+  // Pertahankan owner asli tugas
+  if (!task.owner) task.owner = owner;
+  task.submittedBy = owner;
   if (link !== undefined) task.submissionLink = link.trim();
   if (notes !== undefined) task.notes = notes.trim();
   task.status = status || 'done';

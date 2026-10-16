@@ -364,6 +364,11 @@
   }
 
   function validURL(str) {
+    if (!str) return '';
+    str = str.trim();
+    if (!str.startsWith('http://') && !str.startsWith('https://')) {
+      str = 'https://' + str;
+    }
     try {
       let u = new URL(str);
       return ['http:', 'https:'].includes(u.protocol) ? u.href : '';
@@ -495,8 +500,8 @@
       if (API.isServerAvailable || API.isCloudConnected) {
         const remoteTasks = await API.getTasks();
         if (remoteTasks && remoteTasks.length) {
-          const currentSig = JSON.stringify(tasks.map(t => [t.id, t.status, t.owner, t.submissionLink, t.fileMeta ? t.fileMeta.name : '']));
-          const remoteSig = JSON.stringify(remoteTasks.map(t => [t.id, t.status, t.owner, t.submissionLink, t.fileMeta ? t.fileMeta.name : '']));
+          const currentSig = JSON.stringify(tasks.map(t => [t.id, t.status, t.owner, t.claimedBy || '', t.submissionLink, t.notes || '', t.fileMeta ? (t.fileMeta.downloadUrl || t.fileMeta.name) : '']));
+          const remoteSig = JSON.stringify(remoteTasks.map(t => [t.id, t.status, t.owner, t.claimedBy || '', t.submissionLink, t.notes || '', t.fileMeta ? (t.fileMeta.downloadUrl || t.fileMeta.name) : '']));
           if (currentSig !== remoteSig) {
             tasks = remoteTasks;
             saveLocalBackup();
@@ -671,7 +676,7 @@
               <i data-lucide="archive" style="width:13px;height:13px"></i>
               ${safeHTML(t.fileMeta.name)} (${safeHTML(t.fileMeta.size)})
             </span>
-            <a href="${dlUrl}" download="${safeHTML(t.fileMeta.name)}" class="download-btn">
+            <a href="${dlUrl}" download="${safeHTML(t.fileMeta.name)}" target="_blank" rel="noopener noreferrer" class="download-btn">
               <i data-lucide="download" style="width:11px;height:11px"></i> Unduh
             </a>
           </div>
@@ -752,18 +757,30 @@
                 : '<span style="display:inline-flex;align-items:center;gap:4px;color:#6b7280;font-weight:900"><i data-lucide="circle-dot" style="width:13px;height:13px"></i> BELUM DIAMBIL</span>'}
             </span>
             <div class="task-actions">
-              <button class="taskbtn submit" data-act="submit-task" data-id="${t.id}" title="Kumpulkan hasil / update status">
-                <i data-lucide="upload-cloud" style="width:13px;height:13px"></i> KUMPULKAN
-              </button>
+              ${(isReihan() || isMine) ? `
+                <button class="taskbtn submit" data-act="submit-task" data-id="${t.id}" title="Kumpulkan hasil / update status">
+                  <i data-lucide="upload-cloud" style="width:13px;height:13px"></i> KUMPULKAN
+                </button>
+              ` : `
+                <button class="taskbtn submit" data-act="submit-task" data-id="${t.id}" title="Hanya ${safeHTML(t.owner || 'Member')} atau Reihan yang dapat mengumpulkan tugas ini" style="color:#777;background:#f3f4f6">
+                  <i data-lucide="lock" style="width:12px;height:12px"></i> KUMPULKAN
+                </button>
+              `}
 
               ${t.status === 'open' ? `
                 <button class="taskbtn claim" data-act="take" data-id="${t.id}">
                   <i data-lucide="sparkles" style="width:12px;height:12px"></i> KLAIM
                 </button>
               ` : t.status === 'doing' ? `
-                <button class="taskbtn" data-act="mark-done" data-id="${t.id}" title="Tandai selesai">
-                  <i data-lucide="check" style="width:12px;height:12px"></i> SELESAI
-                </button>
+                ${(isReihan() || isMine) ? `
+                  <button class="taskbtn" data-act="mark-done" data-id="${t.id}" title="Tandai selesai">
+                    <i data-lucide="check" style="width:12px;height:12px"></i> SELESAI
+                  </button>
+                ` : `
+                  <button class="taskbtn" data-act="mark-done" data-id="${t.id}" title="Hanya ${safeHTML(t.owner || 'Member')} atau Reihan yang dapat menandai tugas ini selesai" style="color:#777;background:#f3f4f6">
+                    <i data-lucide="lock" style="width:12px;height:12px"></i> SELESAI
+                  </button>
+                `}
                 ${(isReihan() || (currentUser && t.owner && t.owner.toLowerCase() === currentUser.toLowerCase())) ? `
                   <button class="taskbtn" data-act="cancel-claim" data-id="${t.id}" title="${isReihan() && (!currentUser || !t.owner || t.owner.toLowerCase() !== currentUser.toLowerCase()) ? 'Batalkan klaim tugas ini (Reihan)' : 'Batalkan klaim tugas milik kamu'}" style="background:#fff2f2;color:#b91c1c;border-color:#b91c1c">
                     <i data-lucide="x" style="width:12px;height:12px"></i> BATAL KLAIM
@@ -1009,10 +1026,16 @@
       detailTakeBtn.addEventListener('click', async () => {
         closeTaskDetailModal();
         if (!currentUser) {
-          openLoginModal(task.owner || '');
+          const want = confirm('Silakan login terlebih dahulu untuk klaim tugas ini. Buka dialog login?');
+          if (want) openLoginModal(task.owner || '');
         } else {
+          if (task.owner && task.owner.toLowerCase() !== currentUser.toLowerCase()) {
+            const proceed = confirm(`Perhatian: Tugas #${task.id} ini dialokasikan untuk ${task.owner}.\nApakah kamu (${currentUser}) yakin ingin mengklaim tugas milik ${task.owner}?`);
+            if (!proceed) return;
+          }
           await API.claimTask(task.id, currentUser);
           task.status = 'doing';
+          task.claimedBy = currentUser;
           saveLocalBackup();
           render();
           showToast(`Tugas #${task.id} (${task.title}) berhasil diklaim! ⚡`);
@@ -1074,7 +1097,18 @@
     const sel = $('sub-task-select');
     sel.innerHTML = '<option value="">-- Pilih Jobdesk yang Dikumpulkan --</option>';
 
-    tasks.forEach(t => {
+    // Filter daftar tugas: jika bukan Reihan, hanya tampilkan tugas milik user saat ini
+    const filteredTasks = tasks.filter(t => {
+      if (!isReihan()) {
+        return t.owner && currentUser && t.owner.toLowerCase() === currentUser.toLowerCase();
+      }
+      if (filterOwner && filterOwner !== 'all') {
+        return t.owner && t.owner.toLowerCase() === filterOwner.toLowerCase();
+      }
+      return true;
+    });
+
+    filteredTasks.forEach(t => {
       const opt = document.createElement('option');
       opt.value = t.id;
       opt.textContent = `[${t.owner}] #${t.id} - ${t.title} (${t.status.toUpperCase()})`;
@@ -1083,6 +1117,30 @@
       }
       sel.appendChild(opt);
     });
+
+    if (!selectedTaskId && filteredTasks.length === 1) {
+      sel.value = filteredTasks[0].id;
+      loadTaskToSubmitForm(filteredTasks[0]);
+    }
+  }
+
+  function loadTaskToSubmitForm(task) {
+    if (task) {
+      $('sub-link').value = task.submissionLink || '';
+      $('sub-notes').value = task.notes || '';
+      $('sub-status').value = task.status === 'done' ? 'done' : 'doing';
+      if (task.fileMeta) {
+        $('file-name-display').textContent = `${task.fileMeta.name} (${task.fileMeta.size})`;
+        $('file-preview-wrap').style.display = 'block';
+      } else {
+        $('file-preview-wrap').style.display = 'none';
+      }
+    } else {
+      $('sub-link').value = '';
+      $('sub-notes').value = '';
+      $('sub-status').value = 'done';
+      $('file-preview-wrap').style.display = 'none';
+    }
   }
 
   function openSubmitModal(taskId = null) {
@@ -1094,6 +1152,13 @@
     }
 
     const task = taskId ? tasks.find(t => t.id === Number(taskId)) : null;
+    if (task && !isReihan()) {
+      const isOwner = task.owner && task.owner.toLowerCase() === currentUser.toLowerCase();
+      if (!isOwner) {
+        alert(`Akses Dibatasi: Tugas #${task.id} adalah milik ${task.owner}. Hanya ${task.owner} atau Reihan yang berwenang mengumpulkan hasil tugas ini!`);
+        return;
+      }
+    }
 
     if (currentUser) {
       $('sub-owner').value = isReihan() && task && task.owner ? task.owner : currentUser;
@@ -1111,23 +1176,7 @@
     }
 
     populateTaskSelect(task ? task.id : null, $('sub-owner').value);
-
-    if (task) {
-      $('sub-link').value = task.submissionLink || '';
-      $('sub-notes').value = task.notes || '';
-      $('sub-status').value = task.status === 'done' ? 'done' : 'doing';
-      if (task.fileMeta) {
-        $('file-name-display').textContent = `${task.fileMeta.name} (${task.fileMeta.size})`;
-        $('file-preview-wrap').style.display = 'block';
-      } else {
-        $('file-preview-wrap').style.display = 'none';
-      }
-    } else {
-      $('sub-link').value = '';
-      $('sub-notes').value = '';
-      $('sub-status').value = 'done';
-      $('file-preview-wrap').style.display = 'none';
-    }
+    loadTaskToSubmitForm(task);
 
     stagedFile = null;
     $('modal-submit-wrap').classList.add('show');
@@ -1230,7 +1279,7 @@
                   <i data-lucide="archive" style="width:14px;height:14px"></i>
                   ${safeHTML(s.fileMeta.name)} (${safeHTML(s.fileMeta.size)})
                 </span>
-                <a href="${dlUrl}" download="${safeHTML(s.fileMeta.name)}" class="download-btn" style="padding:4px 10px;font-size:11px">
+                <a href="${dlUrl}" download="${safeHTML(s.fileMeta.name)}" target="_blank" rel="noopener noreferrer" class="download-btn" style="padding:4px 10px;font-size:11px">
                   <i data-lucide="download" style="width:12px;height:12px"></i> Unduh File ZIP
                 </a>
               </div>
@@ -1732,7 +1781,7 @@
 
             <div class="post-footer">
               <span style="font-weight:800;color:#666">⚡ Outbreak 2D</span>
-              ${(currentUser === p.author || isReihan()) ? `
+              ${((currentUser && p.author && currentUser.toLowerCase() === p.author.toLowerCase()) || isReihan()) ? `
                 <button type="button" class="btn-post-del" data-del-prog="${p.id}">
                   <i data-lucide="trash-2" style="width:11px;height:11px"></i> Hapus
                 </button>
@@ -1791,6 +1840,26 @@
         }
 
         if (act === 'mark-done') {
+          if (!currentUser) {
+            alert('Akses Dibatasi: Silakan login terlebih dahulu untuk menandai tugas ini selesai.');
+            openLoginModal(memberName);
+            return;
+          }
+
+          const isOwner = task.owner && task.owner.toLowerCase() === currentUser.toLowerCase();
+          if (!isOwner && !isReihan()) {
+            alert(`Akses Dibatasi: Tugas #${task.id} adalah milik ${task.owner}. Hanya ${task.owner} atau Reihan yang dapat menandai tugas ini selesai!`);
+            return;
+          }
+
+          if (!task.submissionLink && !task.fileMeta) {
+            const want = confirm('Tugas ini belum memiliki tautan Drive atau file ZIP. Buka form pengumpulan sekarang?');
+            if (want) {
+              openSubmitModal(taskId);
+              return;
+            }
+          }
+
           await API.updateStatus(taskId, 'done');
           task.status = 'done';
           saveLocalBackup();
@@ -2049,7 +2118,7 @@
       currentUser = null;
       localStorage.removeItem('rrby_outbreak_current_user');
       updateAuthUI();
-      render();
+      backToTaskBoard();
       showToast('Kamu telah logout.');
     });
 
@@ -2158,6 +2227,19 @@
       stagedFile = null;
       fileInput.value = '';
       $('file-preview-wrap').style.display = 'none';
+    });
+
+    $('sub-owner').addEventListener('change', () => {
+      populateTaskSelect(null, $('sub-owner').value);
+      const selId = Number($('sub-task-select').value);
+      const t = tasks.find(x => x.id === selId);
+      loadTaskToSubmitForm(t);
+    });
+
+    $('sub-task-select').addEventListener('change', () => {
+      const selId = Number($('sub-task-select').value);
+      const t = tasks.find(x => x.id === selId);
+      loadTaskToSubmitForm(t);
     });
 
     // Submit Form
@@ -2511,6 +2593,7 @@
 
           await API.claimTask(taskId, currentUser);
           task.status = 'doing';
+          task.claimedBy = currentUser;
           saveLocalBackup();
           render();
           showToast(`Tugas #${taskId} (${task.title}) berhasil diklaim! ⚡`);
