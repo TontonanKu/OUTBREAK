@@ -260,6 +260,8 @@ const Sound = {
    EMBERS (partikel bara api)
    ========================================================= */
 
+// Bara api digambar dari sprite cahaya yang dibuat sekali di awal (bukan shadowBlur per partikel,
+// yang sangat berat), resolusi 1x, dan gerakannya mengikuti waktu supaya sama di layar 60/90/144 Hz.
 class Embers {
   constructor(canvas, density = 1) {
     this.c = canvas;
@@ -267,57 +269,71 @@ class Embers {
     this.density = density;
     this.parts = [];
     this.running = false;
+    this.sprites = [Embers.glow(24), Embers.glow(48)]; // oranye, kuning
     this.resize = this.resize.bind(this);
     this.tick = this.tick.bind(this);
     window.addEventListener("resize", this.resize);
     this.resize();
   }
 
+  static glow(hue) {
+    const s = 32, c = document.createElement("canvas");
+    c.width = c.height = s;
+    const g = c.getContext("2d");
+    const grd = g.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+    grd.addColorStop(0, `hsla(${hue}, 100%, 78%, 1)`);
+    grd.addColorStop(0.16, `hsla(${hue}, 100%, 60%, .95)`);
+    grd.addColorStop(0.42, `hsla(${hue}, 100%, 50%, .28)`);
+    grd.addColorStop(1, `hsla(${hue}, 100%, 50%, 0)`);
+    g.fillStyle = grd;
+    g.fillRect(0, 0, s, s);
+    return c;
+  }
+
   resize() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const w = this.c.clientWidth, h = this.c.clientHeight;
     this.w = w; this.h = h;
-    this.c.width = w * dpr; this.c.height = h * dpr;
-    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const n = Math.round((w * h) / 16000 * this.density);
+    this.c.width = w; this.c.height = h;
+    const n = Math.round((w * h) / 20000 * this.density);
     this.parts = Array.from({ length: n }, () => this.spawn(true));
   }
 
   spawn(anywhere) {
+    const r = Math.random() * 1.8 + 0.6;
     return {
       x: Math.random() * this.w,
       y: anywhere ? Math.random() * this.h : this.h + 10,
-      r: Math.random() * 1.8 + 0.6,
+      d: r * 7,
       vy: Math.random() * 0.6 + 0.25,
       vx: (Math.random() - 0.5) * 0.3,
       sway: Math.random() * Math.PI * 2,
       life: Math.random() * 0.6 + 0.4,
-      hue: Math.random() < 0.8 ? 18 + Math.random() * 22 : 50,
+      img: this.sprites[Math.random() < 0.8 ? 0 : 1],
     };
   }
 
-  start() { if (!this.running && !reduceMotion) { this.running = true; requestAnimationFrame(this.tick); } }
+  start() { if (!this.running && !reduceMotion) { this.running = true; this.last = 0; requestAnimationFrame(this.tick); } }
   stop() { this.running = false; }
 
   tick(t) {
     if (!this.running) return;
+    const k = this.last ? Math.min(3, (t - this.last) / 16.67) : 1;
+    this.last = t;
     const { ctx } = this;
     ctx.clearRect(0, 0, this.w, this.h);
     ctx.globalCompositeOperation = "lighter";
     for (const p of this.parts) {
-      p.sway += 0.02;
-      p.y -= p.vy;
-      p.x += p.vx + Math.sin(p.sway) * 0.35;
+      p.sway += 0.02 * k;
+      p.y -= p.vy * k;
+      p.x += (p.vx + Math.sin(p.sway) * 0.35) * k;
       if (p.y < -10) Object.assign(p, this.spawn(false));
       const fade = Math.min(1, p.y / (this.h * 0.35));
       const a = p.life * fade * (0.6 + 0.4 * Math.sin(t / 300 + p.sway));
-      ctx.beginPath();
-      ctx.fillStyle = `hsla(${p.hue}, 100%, 60%, ${a})`;
-      ctx.shadowColor = `hsla(${p.hue}, 100%, 55%, ${a})`;
-      ctx.shadowBlur = 8;
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fill();
+      if (a <= 0.01) continue;
+      ctx.globalAlpha = a;
+      ctx.drawImage(p.img, p.x - p.d / 2, p.y - p.d / 2, p.d, p.d);
     }
+    ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = "source-over";
     requestAnimationFrame(this.tick);
   }
@@ -362,6 +378,7 @@ const FP = {
       window.scrollTo(0, 0);
       this.bindDesktop();
       this.apply(false);
+      this.settleNear();
     } else {
       this.el.style.transform = "";
       this.bindMobile();
@@ -445,10 +462,24 @@ const FP = {
     }
     if (i === this.idx) return;
     this.locked = true;
+    this.setNear(this.idx, i);
     this.idx = i;
     this.apply(true);
     this.activate(i);
     setTimeout(() => { this.locked = false; }, 1100);
+  },
+
+  // Section yang dilewati selama transisi ikut digambar; setelah sampai, hanya section aktif yang tetap tampil.
+  setNear(from, to) {
+    const lo = Math.min(from, to), hi = Math.max(from, to);
+    this.secs.forEach((s, k) => s.classList.toggle("is-near", k >= lo && k <= hi));
+    clearTimeout(this._near);
+    this._near = setTimeout(() => this.settleNear(), 1150);
+  },
+
+  settleNear() {
+    const i = this.idx, isFooter = this.secs[i].id === "footer";
+    this.secs.forEach((s, k) => s.classList.toggle("is-near", k === i || (isFooter && k === i - 1)));
   },
 
   activate(i) {

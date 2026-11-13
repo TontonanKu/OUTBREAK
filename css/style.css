@@ -475,9 +475,15 @@ body[data-section]:not([data-section="0"]) .gnb__logo { opacity: 1; transform: n
 .fp { position: relative; }
 
 html.fp-on .fp {
-  will-change: transform;
   transition: transform 1.05s var(--ease);
 }
+
+/* Section yang tidak sedang terlihat tidak digambar dan animasinya dihentikan,
+   supaya browser hanya bekerja untuk 1-2 section yang tampil di layar. */
+html.fp-on .sec:not(.is-near) { visibility: hidden; }
+html.fp-on .sec:not(.is-near) *,
+html.fp-on .sec:not(.is-near) *::before,
+html.fp-on .sec:not(.is-near) *::after { animation-play-state: paused !important; }
 
 .sec {
   position: relative;
@@ -872,8 +878,10 @@ html.fp-on .sec-footer { height: auto; }
 }
 
 /* curved bone panel */
-.heroes__panel { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
-.heroes__panel > div { position: absolute; inset: 0; transition: clip-path 1.1s var(--ease); }
+/* panel digeser pakai transform (murah, dikerjakan GPU), bukan animasi clip-path yang harus digambar ulang tiap frame */
+.heroes__panel { position: absolute; inset: 0; z-index: -1; pointer-events: none; transition: transform 1.1s var(--ease); }
+.heroes__panel > div { position: absolute; inset: 0; }
+.sec-heroes:not(.is-active) .heroes__panel { transform: translateX(-40vw); }
 
 .heroes__rim { background: var(--hazard); clip-path: circle(calc(var(--R) + 20px) at var(--cx) var(--cy)); }
 .heroes__ink { background: var(--ink); clip-path: circle(calc(var(--R) + 7px) at var(--cx) var(--cy)); }
@@ -885,10 +893,6 @@ html.fp-on .sec-footer { height: auto; }
     radial-gradient(rgba(0, 0, 0, .07) 1.4px, transparent 1.6px) 0 0 / 14px 14px,
     radial-gradient(ellipse 80% 60% at 30% 40%, #F6F2EA, #E3DDCF);
 }
-
-.sec-heroes:not(.is-active) .heroes__rim { clip-path: circle(calc(var(--R) + 20px) at calc(var(--cx) - 40vw) var(--cy)); }
-.sec-heroes:not(.is-active) .heroes__ink { clip-path: circle(calc(var(--R) + 7px) at calc(var(--cx) - 40vw) var(--cy)); }
-.sec-heroes:not(.is-active) .heroes__paper { clip-path: circle(var(--R) at calc(var(--cx) - 40vw) var(--cy)); }
 
 .heroes__info {
   position: absolute;
@@ -1192,11 +1196,12 @@ html.fp-on .sec-footer { height: auto; }
   background-position: center;
   background-size: cover;
   opacity: 0;
+  visibility: hidden;
   transform: scale(1.1);
-  transition: opacity 1.1s ease, transform 9s linear;
+  transition: opacity 1.1s ease, transform 9s linear, visibility 0s linear 1.1s;
 }
 
-.zones__bg.is-on { opacity: 1; transform: scale(1); }
+.zones__bg.is-on { opacity: 1; visibility: visible; transform: scale(1); transition: opacity 1.1s ease, transform 9s linear, visibility 0s; }
 
 .zones__shade {
   position: absolute;
@@ -2099,11 +2104,11 @@ html.fp-on .sec-footer { height: auto; }
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: rgba(20, 20, 22, .78);
+  /* tanpa backdrop-filter: blur di atas background yang bergerak bikin berat */
+  background: rgba(16, 16, 18, .9);
   border: 2px solid rgba(255, 255, 255, .35);
   box-shadow: 0 0 0 3px rgba(0, 0, 0, .5);
   color: #fff;
-  backdrop-filter: blur(6px);
   transition: border-color .2s, background .2s, transform .2s var(--ease-out);
 }
 
