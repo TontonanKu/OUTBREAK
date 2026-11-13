@@ -1876,7 +1876,8 @@ html.fp-on .sec-footer { height: auto; }
 }
 
 .team__content {
-  width: min(1200px, calc(100% - 2 * var(--gutter)));
+  /* sisakan ruang untuk tombol tetap di pojok (musik, ke atas, maskot) */
+  width: min(1200px, calc(100% - 2 * var(--gutter) - 170px));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2522,7 +2523,7 @@ body[data-section]:not([data-section="0"]) .btn-top { opacity: 1; transform: non
   .bubble::before { left: 50%; translate: -50% 0; }
 
   /* team */
-  .team__content { padding: calc(var(--head) + 40px) 0 110px; }
+  .team__content { width: calc(100% - 2 * var(--gutter)); padding: calc(var(--head) + 40px) 0 110px; }
   .team__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 640px; }
   .tcard__photo { max-height: none; }
 

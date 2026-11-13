@@ -1,54 +1,157 @@
-# OUTBREAK website
+<p align="center">
+  <img src="docs/readme/banner.png" alt="OUTBREAK: Survive in a city that fell apart" width="100%">
+</p>
 
-Website resmi OUTBREAK (RRBY Studio). Isinya file statis biasa (HTML, CSS, JS), tanpa build dan tanpa server.
+<p align="center">
+  <a href="https://outbreak.zura-w.my.id"><img src="https://img.shields.io/badge/PLAY%20%26%20VISIT-outbreak.zura--w.my.id-D41A1A?style=for-the-badge" alt="Website"></a>
+  <img src="https://img.shields.io/badge/Status-Demo%20v0.1-F2C200?style=for-the-badge" alt="Demo v0.1">
+  <img src="https://img.shields.io/badge/Made%20with-Unity%206-232326?style=for-the-badge&logo=unity&logoColor=white" alt="Unity 6">
+  <img src="https://img.shields.io/badge/Platform-Windows%20PC-3F7F00?style=for-the-badge" alt="Windows PC">
+</p>
 
-- `index.html` : struktur halaman
-- `css/style.css` : tampilan (warna dan bentuk dari OUTBREAK UI KIT v9)
-- `js/main.js` : semua isi yang bisa diganti ada di bagian atas file ini
-- `assets/` : gambar, sprite, audio, foto tim
-- `CNAME` : subdomain untuk GitHub Pages (`outbreak.zura-w.my.id`)
+<p align="center">
+  <b>OUTBREAK</b> adalah game <b>2D zombie survival lane shooter</b> buatan <b>RRBY Studio</b>.<br>
+  Pilih hero, ambil senjata, dan bersihkan lima zona kota yang sudah runtuh dari serbuan zombie.
+</p>
 
-## Buka di komputer sendiri
+<p align="center">
+  <a href="#-cuplikan-website">Cuplikan</a> •
+  <a href="#-hero">Hero</a> •
+  <a href="#-zona-misi">Zona</a> •
+  <a href="#-senjata">Senjata</a> •
+  <a href="#-cara-main">Cara main</a> •
+  <a href="#-tim">Tim</a> •
+  <a href="#-untuk-developer">Developer</a>
+</p>
 
-Klik dua kali `index.html`. Atau, biar sama persis dengan versi online, jalankan server kecil dari folder ini, lalu buka `http://localhost:8000`:
+---
+
+## 🧟 Cuplikan website
+
+Repo ini adalah website resmi OUTBREAK yang online di **[outbreak.zura-w.my.id](https://outbreak.zura-w.my.id)**. Websitenya full-page scroll: satu scroll pindah satu layar, dengan preloader ala layar loading game, musik latar dari game, dan tampilan yang tetap rapi di HP.
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/readme/home.png" alt="Halaman utama"><p align="center"><b>Home</b><br><sub>Logo, trailer, tombol download</sub></p></td>
+    <td width="50%"><img src="docs/readme/heroes.png" alt="Heroes"><p align="center"><b>Heroes</b><br><sub>Roda potret hero di panel melengkung</sub></p></td>
+  </tr>
+  <tr>
+    <td><img src="docs/readme/zones.png" alt="Zones"><p align="center"><b>Zones</b><br><sub>Lima zona misi lengkap dengan target dan hadiah</sub></p></td>
+    <td><img src="docs/readme/roadmap.png" alt="Roadmap"><p align="center"><b>Roadmap</b><br><sub>Papan rencana update</sub></p></td>
+  </tr>
+  <tr>
+    <td><img src="docs/readme/community.png" alt="Community"><p align="center"><b>Community</b><br><sub>Sosial media dan newsletter</sub></p></td>
+    <td><img src="docs/readme/team.png" alt="Team"><p align="center"><b>Team</b><br><sub>Orang-orang di balik OUTBREAK</sub></p></td>
+  </tr>
+</table>
+
+## 🦸 Hero
+
+| | Hero | Peran | HP | ATK | SPD | Status |
+|:-:|---|---|:-:|:-:|:-:|---|
+| <img src="assets/sprites/alekk/r0_c0.png" width="72" alt="ALEKK"> | **ALEKK** | All-Rounder | 100 | 40 | 235 | ✅ Bisa dimainkan |
+| <img src="assets/art/sil_hero.png" width="72" alt="ERIKA (siluet)"> | **ERIKA** | Speedster | ??? | ??? | ??? | 🔒 Coming soon |
+| <img src="assets/art/sil_hero.png" width="72" alt="HANK (siluet)"> | **HANK** | Tank | ??? | ??? | ??? | 🔒 Coming soon |
+
+> *"Headphones on. Hood up. Nobody gets left behind."* — ALEKK
+
+## 🗺️ Zona misi
+
+| | Zona | Kesulitan | Target | Syarat | Hadiah |
+|:-:|---|---|---|---|--:|
+| <img src="assets/zones/ikon_misi_1_highway@2x.png" width="44" alt=""> | **Highway** | 🟧 EASY | Kill 20 zombie | 90 detik | +100 |
+| <img src="assets/zones/ikon_misi_2_bridge@2x.png" width="44" alt=""> | **Bridge** | 🟩 NORMAL | Survive 150 detik | 4 wave, runner | +300 |
+| <img src="assets/zones/ikon_misi_3_water_tower@2x.png" width="44" alt=""> | **Water Tower** | 🟪 HARD | Pertahankan barikade | Kill 65, HP > 50% | +650 |
+| <img src="assets/zones/ikon_misi_4_downtown@2x.png" width="44" alt=""> | **Downtown** | 🟦 EXPERT | Bertahan di kabut beracun | 240 detik, tanpa medkit | +1.400 |
+| <img src="assets/zones/ikon_misi_5_the_nest@2x.png" width="44" alt=""> | **The Nest** | 🟥 NIGHTMARE | Kalahkan bos mutan | 100 zombie + TYRANT | +3.000 |
+
+## 🔫 Senjata
+
+| | Senjata | Damage | Amunisi |
+|:-:|---|:-:|:-:|
+| <img src="assets/art/gun_lucky.png" width="110" alt="LUCKY"> | **LUCKY** | 25 | 30 |
+| <img src="assets/art/gun_hazmat.png" width="110" alt="HAZMAT"> | **HAZMAT** | 42 | 45 |
+| <img src="assets/art/gun_butcher.png" width="110" alt="BUTCHER"> | **BUTCHER** | 16 × 7 | 8 |
+
+## 🎮 Cara main
+
+| Tombol | Aksi |
+|---|---|
+| <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> | Bergerak |
+| <kbd>Klik kiri</kbd> | Menembak |
+| <kbd>E</kbd> | Pakai medkit (+50 HP) |
+| <kbd>Q</kbd> | Pakai ammo box |
+
+Selesaikan zona untuk dapat cash, lalu belanjakan untuk senjata dan medkit di SHOP.
+
+## 👥 Tim
+
+<table>
+  <tr>
+    <td align="center" width="25%"><img src="assets/team/reihan.png" width="150" alt="M. Reihan Fahreza"><br><b>M. Reihan Fahreza</b><br><sub>Project Manager · UI/UX · Programmer</sub></td>
+    <td align="center" width="25%"><img src="assets/team/arroyan.webp" width="150" alt="M. Arroyan"><br><b>M. Arroyan</b><br><sub>2D Artist (Hero) · SFX</sub></td>
+    <td align="center" width="25%"><img src="assets/team/bintang.webp" width="150" alt="Bintang Raffi Pasha Islami"><br><b>Bintang Raffi Pasha Islami</b><br><sub>Sound Designer</sub></td>
+    <td align="center" width="25%"><img src="assets/team/zahara.webp" width="150" alt="Zahara Febriani Ahmad"><br><b>Zahara Febriani Ahmad</b><br><sub>2D Artist (Zombie)</sub></td>
+  </tr>
+</table>
+
+---
+
+## 🛠️ Untuk developer
+
+Website ini file statis biasa (HTML, CSS, JavaScript murni). Nggak perlu build, nggak perlu install apa-apa.
+
+```
+├── index.html        struktur halaman
+├── css/style.css     tampilan (warna dan bentuk dari OUTBREAK UI KIT v9)
+├── js/main.js        semua isi yang bisa diganti ada di bagian atas file ini
+├── assets/           gambar, sprite, audio, foto tim
+├── docs/readme/      gambar untuk README ini
+└── CNAME             subdomain GitHub Pages (outbreak.zura-w.my.id)
+```
+
+### Buka di komputer sendiri
+
+Klik dua kali `index.html`. Atau, biar sama persis dengan versi online, jalankan server kecil dari folder ini lalu buka `http://localhost:8000`:
 
 ```
 npx serve -l 8000 .
 ```
 
-## Mengganti isi
+### Mengganti isi
 
 Semua yang perlu diubah ada di bagian atas `js/main.js`:
 
 | Bagian | Isi |
 |---|---|
-| `CONFIG.links` | Discord, YouTube, Facebook, email, press kit. Link yang masih kosong otomatis tampil "Coming soon". |
-| `CONFIG.stores` | Tombol Windows PC / itch.io / Google Play. Link yang masih kosong otomatis tampil "Coming soon". |
+| `CONFIG.links` | Discord, YouTube, Facebook, email, press kit. Link kosong otomatis tampil "Coming soon". |
+| `CONFIG.stores` | Tombol Windows PC / itch.io / Google Play. Link kosong otomatis tampil "Coming soon". |
 | `CONFIG.trailerYouTubeId` | ID video trailer YouTube |
 | `CONFIG.newsletterAction` | URL form newsletter (misalnya Formspree) |
 | `HEROES` | Data hero. `soon: true` = tampil siluet + "Coming soon". |
 | `ZONES`, `ROADMAP`, `NEWS`, `TEAM` | Misi, roadmap, berita, tim |
 
-Setelah mengubah CSS atau JS, naikkan angka `?v=` di `index.html` (misalnya `1.2.4` jadi `1.2.5`) supaya browser pengunjung tidak memakai file lama.
+Setelah mengubah CSS atau JS, naikkan angka `?v=` di `index.html` (misalnya `1.2.6` jadi `1.2.7`) supaya browser pengunjung nggak pakai file lama.
 
-## Online di GitHub Pages + subdomain
+### Update website online
 
-1. Buat repository baru di GitHub, misalnya `outbreak-website`. Untuk akun gratis, repository-nya harus **Public**.
-2. Upload isi folder ini (bukan foldernya) ke branch `main`, sehingga `index.html` ada di paling atas repository.
-3. Di repository: **Settings → Pages → Build and deployment → Source: Deploy from a branch**, pilih `main` dan `/ (root)`, lalu **Save**.
-4. Masih di halaman Pages, isi **Custom domain** dengan `outbreak.zura-w.my.id`, lalu **Save**. File `CNAME` sudah ada, jadi isinya akan sama.
-5. Di panel DNS domain `zura-w.my.id` (tempat domain dibeli, atau Cloudflare kalau nameserver sudah dipindah ke sana), tambahkan:
+Website di-host di **GitHub Pages** dari branch `main` (folder root) dengan custom domain `outbreak.zura-w.my.id`. Setiap commit yang di-push ke `main` otomatis online dalam 1-2 menit.
 
-   | Type | Name / Host | Value / Target | TTL |
-   |---|---|---|---|
-   | CNAME | `outbreak` | `USERNAME.github.io` | Auto / 3600 |
+```
+git add -A
+git commit -m "Update website"
+git push
+```
 
-   Ganti `USERNAME` dengan username GitHub pemilik repository (tanpa nama repo di belakangnya). Kalau pakai Cloudflare, set **Proxy status: DNS only** (awan abu-abu).
-6. Tunggu DNS aktif (biasanya beberapa menit, paling lama sekitar 24 jam). Kalau GitHub Pages sudah menulis "DNS check successful", centang **Enforce HTTPS**.
-7. (Disarankan) Verifikasi domain di **GitHub → Settings (akun) → Pages → Add a domain** dengan record TXT yang diberikan GitHub, supaya subdomain ini tidak bisa dipakai repository orang lain.
+DNS-nya: record `CNAME` dengan nama `outbreak` yang mengarah ke `tontonanku.github.io`.
 
-Setiap kali ada perubahan yang di-push ke `main`, website online ikut terupdate dalam 1-2 menit.
-
-## File download game
+### File download game
 
 GitHub menolak file di atas 100 MB. Kalau zip build Windows lebih besar dari itu, upload ke itch.io atau GitHub Releases, lalu tempel link-nya di `CONFIG.stores`.
+
+---
+
+<p align="center">
+  <img src="assets/art/rrby_logo.png" width="120" alt="RRBY Studio"><br>
+  <sub>© 2026 RRBY Studio. All rights reserved. Made with Unity 6.</sub>
+</p>
