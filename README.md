@@ -55,7 +55,7 @@ Repo ini adalah website resmi OUTBREAK yang online di **[outbreak.zura-w.my.id](
 
 > *"Headphones on. Hood up. Nobody gets left behind."* — ALEKK
 
-## 🗺️ Zona misi
+## 🌆 Zona misi
 
 | | Zona | Kesulitan | Target | Syarat | Hadiah |
 |:-:|---|---|---|---|--:|
@@ -97,7 +97,7 @@ Selesaikan zona untuk dapat cash, lalu belanjakan untuk senjata dan medkit di SH
 
 ---
 
-## 🛠️ Untuk developer
+## 🔧 Untuk developer
 
 Website ini file statis biasa (HTML, CSS, JavaScript murni). Nggak perlu build, nggak perlu install apa-apa.
 
