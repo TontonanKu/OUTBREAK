@@ -1,627 +1,279 @@
 <!doctype html>
-<html lang="id">
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RRBY Team — Jobdesk Dashboard & Pengumpulan Hasil (Game Outbreak)</title>
-<!-- Google Fonts: Plus Jakarta Sans & Inter for uniform crisp typography -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800;900&family=Inter:wght@700;800;900&display=swap" rel="stylesheet">
-<!-- Modern Lucide Icons -->
-<script src="https://unpkg.com/lucide@latest"></script>
-<link rel="stylesheet" href="public/css/style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>OUTBREAK | Survive in a city that fell apart</title>
+  <meta name="description" content="OUTBREAK is a 2D zombie survival lane shooter by RRBY Studio. Pick a hero, grab a gun and clear five zones of a city that fell apart.">
+  <meta name="theme-color" content="#0E0E10">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="OUTBREAK | Survive in a city that fell apart">
+  <meta property="og:description" content="2D zombie survival lane shooter. 3 heroes, 3 guns, 5 zones.">
+  <meta property="og:image" content="assets/bg/hero.jpg">
+  <link rel="icon" type="image/png" href="assets/art/w_skull.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=1.2.5">
 </head>
-<body>
+<body class="is-loading">
 
-<div class="shell">
-  <!-- TOP HEADER -->
-  <header class="top">
-    <div class="brand">
-      <div class="brandmark">R.</div>
-      <div class="brand-text-wrap">
-        <div class="brand-name-row">
-          <span>RRBY</span>
-          <span style="color:#888;font-weight:700">/</span>
-          <span class="title-outbreak">GAME OUTBREAK</span>
-          <button type="button" class="sync-status-badge online" id="btn-sync-status" title="Klik untuk info sinkronisasi cloud Firebase" style="margin-left:6px">
-            <span class="sync-dot" id="sync-dot"></span>
-            <span id="sync-status-text">Live Sync</span>
-          </button>
-        </div>
-        <div class="brand-sub">2D ZOMBIE SURVIVAL (UNITY 6) — TASK &amp; SUBMISSION PORTAL</div>
+  <!-- ================= PRELOADER (gaya layar loading game) ================= -->
+  <div class="preloader" id="preloader" aria-hidden="true">
+    <div class="hazard-strip hazard-strip--top"></div>
+    <div class="preloader__inner">
+      <div class="preloader__logo">
+        <img class="preloader__skull" src="assets/art/skull_big.png" alt="">
+        <img class="preloader__word" src="assets/art/logo_word.png" alt="">
       </div>
+      <div class="loadbar">
+        <div class="loadbar__head">
+          <span class="loadbar__label">LOADING<i>...</i></span>
+          <b class="loadbar__pct" id="loadPct">0%</b>
+        </div>
+        <div class="loadbar__lane">
+          <img class="loadbar__runner" id="loadRunner" src="assets/sprites/alekk/r4_c0.png" alt="">
+        </div>
+        <div class="loadbar__track">
+          <div class="loadbar__fill" id="loadFill"></div>
+        </div>
+      </div>
+      <p class="preloader__tip"><span class="tag-tip">TIP</span><span>Buy medkits in the SHOP and press <b>E</b> during a mission to restore 50 HP.</span></p>
     </div>
+    <div class="hazard-strip hazard-strip--bottom"></div>
+  </div>
 
-    <!-- AUTH BAR -->
-    <div class="auth-bar" id="auth-bar">
-      <div id="auth-logged-out" class="auth-logged-out">
-        <span class="auth-label">ANGGOTA (4 ORANG):</span>
-        <div class="member-pills">
-          <button class="member-pill" data-user="Reihan"><span class="dot"></span>Reihan</button>
-          <button class="member-pill" data-user="Bintang"><span class="dot"></span>Bintang</button>
-          <button class="member-pill" data-user="Royan"><span class="dot"></span>Royan</button>
-          <button class="member-pill" data-user="Eby"><span class="dot"></span>Eby</button>
-        </div>
-        <button class="primary" id="btn-open-login">
-          <i data-lucide="key-round" style="width:13px;height:13px"></i>
-          <span>LOGIN MEMBER</span>
-        </button>
-      </div>
+  <!-- ================= TOP BAR + NAV ================= -->
+  <div class="topbar">
+    <a class="topbar__studio" href="#team" data-goto="team" aria-label="RRBY Studio">
+      <img src="assets/art/rrby_logo.png" alt="RRBY Studio">
+    </a>
+  </div>
 
-      <div id="auth-logged-in" class="user-logged-box" style="display:none">
-        <div class="user-profile-info">
-          <div class="avatar" id="user-avatar">?</div>
-          <div>
-            <div style="font-size:12px;font-weight:900" id="user-display-name">Halo, Member</div>
-            <div style="font-size:9.5px;color:#555;font-weight:800">Anggota Tim Outbreak</div>
-          </div>
-        </div>
-        <div class="user-profile-actions">
-          <button class="nav-pill" id="btn-open-my-profile" title="Buka profil dan posting progres harian kamu">
-            <i data-lucide="user" style="width:12px;height:12px"></i>
-            <span>Profil Saya</span>
-          </button>
-          <button class="nav-pill" id="btn-my-tasks" title="Lihat tugas yang sedang kamu kerjakan">
-            <i data-lucide="star" style="width:12px;height:12px"></i>
-            <span>Tugas Saya</span>
-          </button>
-          <button class="logout-btn" id="btn-logout">
-            <i data-lucide="log-out" style="width:12px;height:12px"></i>
-            <span>LOGOUT</span>
-          </button>
-        </div>
+  <header class="gnb" id="gnb">
+    <a class="gnb__logo" href="#home" data-goto="home" aria-label="OUTBREAK home">
+      <img src="assets/art/logo_head.png" alt="OUTBREAK">
+    </a>
+
+    <nav class="gnb__nav" id="gnbNav" aria-label="Main">
+      <ul class="gnb__menu">
+        <li><a href="#home" data-goto="home" data-nav="home">Home</a></li>
+        <li class="has-sub">
+          <a href="#heroes" data-goto="heroes" data-nav="heroes,zones,roadmap,community">Game Intro<i class="caret" aria-hidden="true"></i></a>
+          <ul class="gnb__sub">
+            <li><a href="#heroes" data-goto="heroes">Heroes</a></li>
+            <li><a href="#zones" data-goto="zones">Zones</a></li>
+            <li><a href="#roadmap" data-goto="roadmap">Roadmap</a></li>
+            <li><a href="#community" data-goto="community">Community</a></li>
+          </ul>
+        </li>
+        <li><a href="#news" data-modal="news">News</a></li>
+        <li><a href="#how-to-play" data-modal="guide">How to Play</a></li>
+        <li><a href="#team" data-goto="team" data-nav="team">Team</a></li>
+        <li><a href="#media" class="is-out" data-modal="trailer">Media<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 9 9 3M4 3h5v5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></a></li>
+      </ul>
+      <div class="gnb__cta">
+        <button class="btn-sub" type="button" data-modal="subscribe"><span>Subscribe to<br>Newsletter</span></button>
+        <a class="kbtn kbtn--green kbtn--slant gnb__play" href="#download" data-goto="home" data-focus="stores"><span>Play Now</span></a>
       </div>
-    </div>
+    </nav>
+
+    <button class="gnb__burger" id="burger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="gnbNav"><span></span><span></span><span></span></button>
   </header>
 
-  <!-- QUICK INFO & FIGMA LINKS -->
-  <div class="quick-links">
-    <span style="display:flex;align-items:center;gap:6px">
-      <i data-lucide="pin" style="width:14px;height:14px"></i>
-      PUSAT ACUAN PROJEK:
-    </span>
-    <a href="https://www.figma.com/design/3z6xuNL6snILkeac92TvGJ/Untitled?node-id=0-1&t=1fbwPhcLpaRk8gBK-1" target="_blank" rel="noopener noreferrer" class="link-badge figma">
-      <i data-lucide="palette" style="width:14px;height:14px"></i>
-      <span>Buka Figma Desain Outbreak ↗</span>
-    </a>
-    <a href="https://tontonanku.github.io/MinMapOutbreak/" target="_blank" rel="noopener noreferrer" class="link-badge mindmap">
-      <i data-lucide="network" style="width:14px;height:14px"></i>
-      <span>Mindmap Outbreak ↗</span>
-    </a>
-    <button class="link-badge" id="btn-open-guidelines">
-      <i data-lucide="clipboard-list" style="width:14px;height:14px"></i>
-      <span>Ketentuan Pengumpulan Dosen</span>
-    </button>
-    <button class="link-badge" id="btn-open-archive" style="background:#fff;border-color:var(--ink)">
-      <i data-lucide="folder-archive" style="width:14px;height:14px;color:var(--orange)"></i>
-      <span>📁 Rekap Hasil Pengumpulan (Folder Uploads)</span>
-    </button>
-    <button class="link-badge reset" id="btn-reset-data">
-      <i data-lucide="rotate-ccw" style="width:12px;height:12px"></i>
-      <span>Reset ke Data Asli Word</span>
-    </button>
-  </div>
+  <!-- ================= FULLPAGE ================= -->
+  <main class="fp" id="fp">
 
-  <!-- ========================================== -->
-  <!-- VIEW 1: JOBDESK DASHBOARD                  -->
-  <!-- ========================================== -->
-  <div id="view-tasks-container">
-    <!-- HERO SECTION (NEO-BRUTALIST) -->
-    <section class="hero">
-      <div>
-        <div class="eyebrow">✳ OUTBREAK 2D ZOMBIE SURVIVAL — REVISI PASCA KONSULTASI DOSEN</div>
-        <h1>GET IT<br><span>DONE.</span></h1>
-      <div class="sub">
-        Setiap tugas sudah dibagi perorangan dengan nama agar tidak salah ambil. Jika sudah selesai, silakan kumpulkan hasil berupa tautan Google Drive / link Figma atau drag langsung file ZIP hasil pekerjaan.
-      </div>
-    </div>
+    <!-- 1. HOME -->
+    <section class="sec sec-home" id="home" data-title="Home">
+      <div class="home__bg"><div class="home__img"></div></div>
+      <canvas class="embers" id="embers" aria-hidden="true"></canvas>
+      <div class="home__fog" aria-hidden="true"></div>
+      <div class="home__shade" aria-hidden="true"></div>
 
-    <div class="hero-right">
-      <div>
-        <div class="eyebrow">TEAM PROGRESS / OVERVIEW</div>
-        <div class="bigstat" id="hero-percent">00%</div>
-      </div>
-      <div>
-        <div style="font-size:10.5px;font-weight:900;letter-spacing:0.6px;margin-bottom:5px">PROGRES PER ANGGOTA:</div>
-        <div class="member-progress-bars" id="member-progress-container">
-          <!-- Populated by JS -->
-        </div>
-      </div>
-    </div>
-  </section>
+      <div class="home__content">
+        <h1 class="home__logo">
+          <span class="home__glow" aria-hidden="true"></span>
+          <img class="home__skull" src="assets/art/skull_big.png" alt="">
+          <img class="home__word" src="assets/art/logo_word.png" alt="OUTBREAK">
+        </h1>
 
-  <!-- STAT ROW -->
-  <section class="statrow">
-    <div class="stat">
-      <small>TOTAL JOBDESK REVISI</small>
-      <div class="num" id="total">00</div>
-    </div>
-    <div class="stat">
-      <small>SEDANG DIKERJAKAN</small>
-      <div class="num" id="doing">00</div>
-    </div>
-    <div class="stat">
-      <small>TERKUMPUL / SELESAI</small>
-      <div class="num" id="done">00</div>
-    </div>
-    <div class="stat">
-      <small>DOKUMEN TERKUMPUL</small>
-      <div class="num" id="submitted-count">00</div>
-    </div>
-  </section>
-
-  <!-- MAIN TOOLBAR -->
-  <div class="toolbar">
-    <div>
-      <div class="sectitle">THE TASK &amp; SUBMISSION BOARD ↘</div>
-      <div style="font-size:11.5px;font-weight:800;color:#555">Klik "Kumpulkan Tugas" untuk mengunggah link Drive/Figma atau drag file ZIP.</div>
-    </div>
-    <div class="btn-group">
-      <!-- MAIN SUBMISSION BUTTON -->
-      <button class="primary" id="btn-main-submit">
-        <i data-lucide="upload-cloud" style="width:16px;height:16px"></i>
-        <span>KUMPULKAN HASIL TUGAS / SUBMIT</span>
-      </button>
-      <button class="secondary" id="btn-manual-sync" title="Perbarui data terbaru dari server">
-        <i data-lucide="refresh-cw" style="width:14px;height:14px"></i>
-        <span>Sinkronkan Data</span>
-      </button>
-      <button class="secondary" id="btn-add-custom-task" title="Tambah jobdesk baru jika ada tambahan dari dosen">
-        <i data-lucide="plus" style="width:14px;height:14px"></i>
-        <span>Tambah Jobdesk</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- FILTER & SEARCH BAR -->
-  <div class="filter-bar">
-    <div class="filters" id="status-filters">
-      <button class="filter active" data-status="all"><i data-lucide="filter" style="width:12px;height:12px"></i> SEMUA STATUS</button>
-      <button class="filter" data-status="open"><i data-lucide="sparkles" style="width:12px;height:12px"></i> TERSEDIA</button>
-      <button class="filter" data-status="doing"><i data-lucide="flame" style="width:12px;height:12px"></i> DIKERJAKAN</button>
-      <button class="filter" data-status="done"><i data-lucide="check-circle-2" style="width:12px;height:12px"></i> SELESAI</button>
-    </div>
-
-    <div class="filters" id="member-filters">
-      <span style="font-size:10.5px;font-weight:900;color:#555">PROFIL ANGGOTA:</span>
-      <button class="filter active" data-member="all" title="Tampilkan semua jobdesk di board"><i data-lucide="layout-grid" style="width:12px;height:12px"></i> SEMUA</button>
-      <button class="filter" data-member="Reihan" title="Buka profil &amp; progres harian Reihan"><i data-lucide="laptop" style="width:12px;height:12px"></i> Reihan</button>
-      <button class="filter" data-member="Bintang" title="Buka profil &amp; progres harian Bintang"><i data-lucide="palette" style="width:12px;height:12px"></i> Bintang</button>
-      <button class="filter" data-member="Royan" title="Buka profil &amp; progres harian Royan"><i data-lucide="shield" style="width:12px;height:12px"></i> Royan</button>
-      <button class="filter" data-member="Eby" title="Buka profil &amp; progres harian Eby"><i data-lucide="skull" style="width:12px;height:12px"></i> Eby</button>
-    </div>
-
-    <div class="search-box">
-      <i data-lucide="search" style="width:14px;height:14px;color:#555"></i>
-      <input type="text" id="search-input" placeholder="Cari jobdesk, aset, figma...">
-    </div>
-  </div>
-
-  <!-- TASK CARDS GRID -->
-  <section class="taskgrid" id="tasks"></section>
-
-  <!-- TEAM PROGRESS SUMMARY -->
-  <section class="progressarea">
-    <div class="progresshead">
-      <div>
-        <div class="eyebrow">✳ TOTAL COMPLETION MILESTONE</div>
-        <div style="font-size:20px;font-weight:900;margin-top:4px" id="progress-heading">MENUJU TUNTAS</div>
-      </div>
-      <div id="progress-label" style="font-size:26px;font-weight:900">0 / 0</div>
-    </div>
-    <div class="track">
-      <div class="fill" id="progress-fill" style="width:0%"></div>
-    </div>
-    <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11px;font-weight:900;color:#555">
-      <span>START</span>
-      <span id="progress-hint">Ayo gas selesaikan semua aset &amp; audio game Outbreak!</span>
-      <span>100% READY</span>
-    </div>
-  </section>
-  </div>
-
-  <!-- ========================================== -->
-  <!-- VIEW 2: HALAMAN KHUSUS PROFIL & PROGRES   -->
-  <!-- ========================================== -->
-  <div id="view-profile-container" style="display:none">
-    <!-- Rendered dynamically by renderMemberProfile() in app.js -->
-  </div>
-
-  <!-- FOOTER -->
-  <footer class="bottom">
-    <span>RRBY STUDIO © 2026 GAME OUTBREAK — 2D ZOMBIE SURVIVAL</span>
-    <span>MEMBERS: REIHAN • BINTANG • ROYAN • EBY</span>
-    <span>UNITY 6 PROJECT ↗</span>
-  </footer>
-</div>
-
-<!-- ========================================== -->
-<!-- MODAL 1: PENGUMPULAN HASIL / SUBMISSION    -->
-<!-- ========================================== -->
-<div class="modalback" id="modal-submit-wrap">
-  <div class="modal">
-    <div class="eyebrow">SUBMISSION PORTAL / PENGUMPULAN</div>
-    <h2>KUMPULKAN<br>HASIL TUGAS.</h2>
-    <div style="font-size:12px;color:#555;margin-bottom:14px">
-      Masukkan tautan Google Drive / Figma, atau langsung drag &amp; drop file ZIP aset kamu.
-    </div>
-
-    <form id="form-submit">
-      <div class="field">
-        <label for="sub-owner">NAMA ANGGOTA PENGUMPUL *</label>
-        <select id="sub-owner" required>
-          <option value="">-- Pilih Nama Kamu --</option>
-          <option value="Reihan">Reihan</option>
-          <option value="Bintang">Bintang</option>
-          <option value="Royan">Royan</option>
-          <option value="Eby">Eby</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="sub-task-select">JOBDESK YANG DIKUMPULKAN *</label>
-        <select id="sub-task-select" required>
-          <option value="">-- Pilih Jobdesk --</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="sub-link">LINK GOOGLE DRIVE / FIGMA / HASIL (OPSIONAL JIKA ADA ZIP)</label>
-        <input type="url" id="sub-link" placeholder="https://drive.google.com/drive/folders/... atau https://figma.com/...">
-        <div style="font-size:10px;color:#666">Pastikan akses share Drive sudah di-setting ke "Anyone with the link".</div>
-      </div>
-
-      <div class="field">
-        <label>ATAU DRAG &amp; DROP FILE ZIP / RAR ASET LANGSUNG:</label>
-        <div class="dropzone" id="dropzone">
-          <div class="dropzone-icon">
-            <i data-lucide="archive" style="width:22px;height:22px"></i>
-          </div>
-          <div class="dropzone-text">Tarik &amp; lepas file ZIP di sini, atau klik untuk browse</div>
-          <div class="dropzone-hint">Format yang didukung: .ZIP, .RAR, .7Z, .PNG, .WAV, .OGG, .unitypackage</div>
-          <input type="file" id="file-input" style="display:none" accept=".zip,.rar,.7z,.tar,.gz,.png,.wav,.ogg,.unitypackage">
-        </div>
-        <div id="file-preview-wrap" style="display:none">
-          <div class="file-preview">
-            <span id="file-name-display">file.zip (0 KB)</span>
-            <button type="button" class="file-remove" id="btn-remove-file">Hapus ✕</button>
-          </div>
-        </div>
-        <div id="upload-progress-wrap" style="display:none;margin-top:8px">
-          <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:800;margin-bottom:4px">
-            <span id="upload-progress-status">Mengunggah file ke cloud...</span>
-            <span id="upload-progress-percent">0%</span>
-          </div>
-          <div style="width:100%;height:8px;background:#eee;border:1.5px solid var(--ink);border-radius:4px;overflow:hidden">
-            <div id="upload-progress-bar" style="width:0%;height:100%;background:var(--orange);transition:width 0.2s"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="field">
-        <label for="sub-notes">CATATAN HASIL / REVISI</label>
-        <textarea id="sub-notes" placeholder="Contoh: 6 varian zombie sudah lengkap dengan 6 state animasi format PNG transparan."></textarea>
-      </div>
-
-      <div class="field">
-        <label for="sub-status">STATUS SETELAH DIKUMPULKAN</label>
-        <select id="sub-status">
-          <option value="done" selected>Done (Selesai &amp; Terkumpul)</option>
-          <option value="doing">In Progress (Masih ada perbaikan, kumpul sementara)</option>
-        </select>
-      </div>
-
-      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
-        <button type="button" class="secondary" id="btn-cancel-submit">BATAL</button>
-        <button type="submit" class="primary">
-          <i data-lucide="send" style="width:14px;height:14px"></i>
-          <span>KUMPULKAN SEKARANG</span>
+        <button class="btn-trailer" type="button" data-modal="trailer" aria-label="Play trailer">
+          <span class="btn-trailer__ring" aria-hidden="true"></span>
+          <span class="btn-trailer__core" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z"/></svg></span>
         </button>
-      </div>
-    </form>
-  </div>
-</div>
 
-<!-- ========================================== -->
-<!-- MODAL 2: LOGIN MEMBER                      -->
-<!-- ========================================== -->
-<div class="modalback" id="modal-login-wrap">
-  <div class="modal">
-    <div class="eyebrow">WORKSPACE SECURITY</div>
-    <h2>LOGIN MEMBER<br>TIM OUTBREAK.</h2>
-    <div style="font-size:12px;color:#555;margin-bottom:14px">
-      Pilih nama kamu dan masukkan password member untuk claim tugas atau menandai selesai.
-    </div>
+        <p class="home__tagline">Survive in a city<br>that fell apart.</p>
 
-    <!-- QUICK MEMBER CARDS -->
-    <div style="font-size:10.5px;font-weight:900;letter-spacing:0.6px;margin-bottom:6px">PILIH NAMA KAMU:</div>
-    <div class="member-select-grid">
-      <div class="member-card-opt" data-name="Reihan">
-        <i data-lucide="laptop" style="width:18px;height:18px"></i>
-        <div><b>Reihan</b><div class="role-sub">Unity &amp; Audio Lead</div></div>
-      </div>
-      <div class="member-card-opt" data-name="Bintang">
-        <i data-lucide="palette" style="width:18px;height:18px"></i>
-        <div><b>Bintang</b><div class="role-sub">UI Design &amp; Audio</div></div>
-      </div>
-      <div class="member-card-opt" data-name="Royan">
-        <i data-lucide="shield" style="width:18px;height:18px"></i>
-        <div><b>Royan</b><div class="role-sub">Character, BG &amp; Voice</div></div>
-      </div>
-      <div class="member-card-opt" data-name="Eby">
-        <i data-lucide="skull" style="width:18px;height:18px"></i>
-        <div><b>Eby</b><div class="role-sub">Zombie Assets Pack</div></div>
-      </div>
-    </div>
-
-    <form id="form-login">
-      <div class="field">
-        <label for="login-name">NAMA TERPILIH *</label>
-        <input type="text" id="login-name" readonly required placeholder="Klik nama di atas">
-      </div>
-
-      <div class="field">
-        <label for="login-password">PASSWORD MEMBER *</label>
-        <div style="position:relative">
-          <input type="password" id="login-password" required placeholder="Masukkan password tim...">
-          <button type="button" id="btn-toggle-pwd" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:none;background:transparent;cursor:pointer">
-            <i data-lucide="eye" style="width:16px;height:16px"></i>
-          </button>
+        <div class="home__btns">
+          <a class="kbtn kbtn--dark" href="#news" data-modal="news"><span>News</span></a>
+          <a class="kbtn kbtn--red" href="#community" data-goto="community"><span>Community</span></a>
         </div>
-        <div style="font-size:10.5px;color:#555;margin-top:4px">
-          💡 Password tersimpan aman menggunakan enkripsi SHA-256.
+
+        <div class="stores" id="stores"><!-- diisi dari CONFIG.stores di js/main.js --></div>
+      </div>
+
+      <a class="scroll-down" href="#heroes" data-goto="heroes" aria-label="Scroll down">
+        <span>Scroll Down</span>
+        <i aria-hidden="true"></i>
+      </a>
+    </section>
+
+    <!-- 2. HEROES (Character) -->
+    <section class="sec sec-heroes" id="heroes" data-title="Heroes">
+      <div class="heroes__stage">
+        <div class="heroes__bg" aria-hidden="true"></div>
+        <div class="heroes__light" aria-hidden="true"></div>
+        <div class="heroes__art" id="heroArt"></div>
+        <div class="heroes__floor" aria-hidden="true"></div>
+      </div>
+
+      <div class="heroes__panel" aria-hidden="true">
+        <div class="heroes__rim"></div>
+        <div class="heroes__ink"></div>
+        <div class="heroes__paper"></div>
+      </div>
+
+      <div class="heroes__info" id="heroInfo">
+        <p class="eyebrow"><i aria-hidden="true"></i>Hero<i aria-hidden="true"></i></p>
+        <h2 class="heroes__name" id="heroName">ALEKK</h2>
+        <p class="heroes__role" id="heroRole">All-Rounder</p>
+        <ul class="chipbar" id="heroChips"></ul>
+        <p class="heroes__quote" id="heroQuote"></p>
+        <div class="divider" aria-hidden="true"><img src="assets/art/w_skull.png" alt=""></div>
+        <div class="heroes__more" id="heroMore">
+          <p class="heroes__desc" id="heroDesc"></p>
+          <div class="statbars" id="heroStats"></div>
         </div>
+        <button class="btn-more" id="heroMoreBtn" type="button" aria-expanded="false" aria-controls="heroMore" aria-label="Read more"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round"/></svg></button>
       </div>
 
-      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
-        <button type="button" class="secondary" id="btn-cancel-login">BATAL</button>
-        <button type="submit" class="primary">
-          <i data-lucide="log-in" style="width:14px;height:14px"></i>
-          <span>MASUK KE WORKSPACE ↗</span>
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
+      <div class="wheel" id="heroWheel" role="tablist" aria-label="Choose hero"></div>
+    </section>
 
-<!-- ========================================== -->
-<!-- MODAL 3: KETENTUAN PENGUMPULAN DARI DOSEN  -->
-<!-- ========================================== -->
-<div class="modalback" id="modal-guidelines-wrap">
-  <div class="modal" style="width:min(600px,100%)">
-    <div class="eyebrow">DOKUMEN REVISI DOSEN</div>
-    <h2>KETENTUAN<br>PENGUMPULAN.</h2>
+    <!-- 3. ZONES (Worldview) -->
+    <section class="sec sec-zones" id="zones" data-title="Zones">
+      <div class="zones__bgs" id="zoneBgs" aria-hidden="true"></div>
+      <div class="zones__shade" aria-hidden="true"></div>
 
-    <div style="font-size:12.5px;line-height:1.6;color:#333">
-      <div style="background:#fff;border:2px solid var(--ink);padding:12px;margin-bottom:12px">
-        <b style="color:var(--orange)">🎮 INFO UMUM GAME:</b><br>
-        • Judul: <b>Outbreak (2D Zombie Survival - Unity 6)</b><br>
-        • Acuan Resolusi: <b>1920 x 1080 (16:9)</b><br>
-        • Font: <b>Inter-Black</b> | Teks UI: <b>Bahasa Inggris</b><br>
-        • Desain Utama: 5 Misi berjenjang (Easy - Nightmare), 3 Hero (Alek, Erika, Hank), 5 Senjata (Revolver, SMG, Shotgun, AR, Sniper).
+      <div class="zones__content" id="zoneContent">
+        <p class="eyebrow eyebrow--light"><i aria-hidden="true"></i><span id="zoneEyebrow">Zone 01</span><i aria-hidden="true"></i></p>
+        <h2 class="zones__title" id="zoneTitle">HIGHWAY</h2>
+        <div class="zones__meta" id="zoneMeta"></div>
+        <p class="zones__desc" id="zoneDesc"></p>
       </div>
 
-      <div style="background:#fff;border:2px solid var(--ink);padding:12px;margin-bottom:12px">
-        <b>🖼 FORMAT ASSET GAMBAR (Royan, Eby, Bintang):</b><br>
-        • Format wajib <b>PNG transparan</b>.<br>
-        • Ukuran frame dan style seragam dengan aset pertama di Figma.<br>
-        • Penamaan file rapi dan seragam (contoh: <code>zombie_walk_01.png</code>, <code>hero_erika_idle_01.png</code>).
-      </div>
+      <ul class="zones__thumbs" id="zoneThumbs" role="tablist" aria-label="Choose zone"></ul>
+    </section>
 
-      <div style="background:#fff;border:2px solid var(--ink);padding:12px;margin-bottom:12px">
-        <b>🎵 FORMAT AUDIO &amp; SFX (Bintang, Royan, Reihan):</b><br>
-        • File dikirim sebagai <b>WAV atau OGG</b> bebas lisensi.<br>
-        • Target volume dalam game: <b>SFX 0.95</b> dan <b>BGM 0.75</b>.<br>
-        • Pastikan audio tidak peaking atau clipping (suara pecah).
-      </div>
+    <!-- 4. ROADMAP -->
+    <section class="sec sec-roadmap" id="roadmap" data-title="Roadmap">
+      <div class="roadmap__bg" aria-hidden="true"></div>
 
-      <div style="background:#fff;border:2px solid var(--ink);padding:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-        <div>
-          <b>📁 TEMPAT PENGUMPULAN &amp; ACUAN:</b><br>
-          Google Drive Shared Folder Tim / langsung upload ZIP di dashboard ini.
+      <div class="board">
+        <a class="presskit" href="#" id="presskit">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11m0 0-4.5-4.5M12 14l4.5-4.5M4 17v3h16v-3" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Press Kit<br>Download</span>
+        </a>
+        <div class="board__head"><h2>Roadmap</h2></div>
+        <div class="board__panel">
+          <span class="rivet rivet--tl"></span><span class="rivet rivet--tr"></span><span class="rivet rivet--bl"></span><span class="rivet rivet--br"></span>
+          <button class="board__arrow board__arrow--prev" id="roadPrev" type="button" aria-label="Previous"><svg viewBox="0 0 24 24"><path d="M15 4 7 12l8 8z"/></svg></button>
+          <div class="board__viewport"><ol class="board__track" id="roadTrack"></ol></div>
+          <button class="board__arrow board__arrow--next" id="roadNext" type="button" aria-label="Next"><svg viewBox="0 0 24 24"><path d="m9 4 8 8-8 8z"/></svg></button>
+          <div class="board__dots" id="roadDots"></div>
         </div>
-        <div style="display:flex;gap:6px">
-          <a href="https://tontonanku.github.io/MinMapOutbreak/" target="_blank" rel="noopener noreferrer" class="link-badge mindmap">
-            Mindmap ↗
-          </a>
-          <a href="https://www.figma.com/design/3z6xuNL6snILkeac92TvGJ/Untitled?node-id=0-1&t=1fbwPhcLpaRk8gBK-1" target="_blank" rel="noopener noreferrer" class="link-badge figma">
-            Buka Figma ↗
-          </a>
+        <div class="board__legs" aria-hidden="true"><i></i><i></i></div>
+      </div>
+    </section>
+
+    <!-- 5. COMMUNITY -->
+    <section class="sec sec-community" id="community" data-title="Community">
+      <div class="community__bg" aria-hidden="true"></div>
+      <canvas class="embers embers--soft" id="embers2" aria-hidden="true"></canvas>
+
+      <div class="community__content">
+        <h2 class="community__title">
+          <img src="assets/art/w_skull.png" alt="" aria-hidden="true">
+          <span>Community</span>
+          <img src="assets/art/w_skull.png" alt="" aria-hidden="true">
+        </h2>
+        <p class="community__sub"><span>Get the latest from the outbreak zone!</span></p>
+
+        <ul class="diamonds" id="diamonds"></ul>
+
+        <button class="kbtn kbtn--bone kbtn--wide" type="button" data-modal="subscribe"><span>Subscribe to Newsletter</span></button>
+      </div>
+    </section>
+
+    <!-- 6. TEAM -->
+    <section class="sec sec-team" id="team" data-title="Team">
+      <div class="team__bg" aria-hidden="true"></div>
+
+      <div class="team__content">
+        <p class="eyebrow eyebrow--light"><i aria-hidden="true"></i>RRBY Studio<i aria-hidden="true"></i></p>
+        <h2 class="team__title">Meet the Survivors</h2>
+        <p class="team__sub">The four people who built OUTBREAK.</p>
+
+        <ul class="team__grid" id="teamGrid"><!-- diisi dari TEAM di js/main.js --></ul>
+      </div>
+    </section>
+
+    <!-- 7. FOOTER -->
+    <footer class="sec sec-footer" id="footer" data-title="Footer">
+      <div class="hazard-strip"></div>
+      <div class="footer__inner">
+        <div class="footer__brand">
+          <img class="footer__rrby" src="assets/art/rrby_logo.png" alt="RRBY Studio">
+          <img class="footer__logo" src="assets/art/logo_head.png" alt="OUTBREAK">
         </div>
+        <ul class="footer__links">
+          <li><a href="#" data-modal="legal">Privacy Policy</a></li>
+          <li><a href="#" data-modal="legal">Terms of Service</a></li>
+          <li><a href="#" class="js-presskit">Press Kit</a></li>
+          <li><a href="#" class="js-contact">Contact</a></li>
+        </ul>
+        <p class="footer__credits" id="footerCredits"><!-- diisi dari TEAM di js/main.js --></p>
+        <p class="footer__copy">&copy; <span id="year">2026</span> RRBY Studio. All rights reserved. Made with Unity 6.</p>
       </div>
-    </div>
+    </footer>
+  </main>
 
-    <div style="display:flex;justify-content:flex-end;margin-top:16px">
-      <button type="button" class="primary" id="btn-close-guidelines">
-        <i data-lucide="check" style="width:14px;height:14px"></i>
-        <span>SAYA MENGERTI</span>
-      </button>
+  <!-- ================= FIXED UI ================= -->
+  <div class="dock dock--left">
+    <button class="btn-round btn-sound" id="btnSound" type="button" aria-pressed="false" aria-label="Turn music on">
+      <svg class="ic-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="m16 9 5 6m0-6-5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <svg class="ic-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>
+    </button>
+    <ul class="socials" id="socials"></ul>
+  </div>
+
+  <div class="dock dock--right">
+    <button class="btn-round btn-top" type="button" data-goto="home" aria-label="Back to top">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V6m0 0-6 6m6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <button class="mascot" id="mascot" type="button" aria-label="Zombie says hi">
+      <span class="mascot__bubble">BRAAINS?</span>
+      <img id="mascotImg" src="assets/sprites/walker/r0_c0.png" alt="">
+    </button>
+  </div>
+
+  <!-- ================= MODALS ================= -->
+  <div class="modal" id="modal" hidden>
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal__head">
+        <h3 id="modalTitle">News</h3>
+        <i class="slashes" aria-hidden="true"></i>
+        <button class="modal__close" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></svg></button>
+      </div>
+      <div class="modal__body" id="modalBody"></div>
     </div>
   </div>
-</div>
 
-<!-- ========================================== -->
-<!-- MODAL 4: TAMBAH / EDIT JOBDESK             -->
-<!-- ========================================== -->
-<div class="modalback" id="modal-task-wrap">
-  <div class="modal">
-    <div class="eyebrow" id="task-modal-eyebrow">TASK EDITOR</div>
-    <h2 id="task-modal-title">EDIT<br>JOBDESK.</h2>
-    <form id="form-task">
-      <div class="field">
-        <label for="task-title">JUDUL JOBDESK *</label>
-        <input type="text" id="task-title" required placeholder="Contoh: Sprite Animasi Tank Zombie">
-      </div>
-      <div class="field">
-        <label for="task-category">KATEGORI</label>
-        <select id="task-category">
-          <option value="Visual Assets">Visual Assets (Karakter, Zombie, BG)</option>
-          <option value="UI / Design">UI / Design (Figma &amp; Menu)</option>
-          <option value="Audio">Audio (SFX, Voice, Musik)</option>
-          <option value="Unity Development">Unity Development (Integrasi, Script)</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="task-owner">PENANGGUNG JAWAB (NAMA ANGGOTA) *</label>
-        <select id="task-owner" required>
-          <option value="Reihan">Reihan</option>
-          <option value="Bintang">Bintang</option>
-          <option value="Royan">Royan</option>
-          <option value="Eby">Eby</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="task-desc">DETAIL &amp; INSTRUKSI</label>
-        <textarea id="task-desc" placeholder="Rincian instruksi pekerjaan..."></textarea>
-      </div>
-      <div class="field">
-        <label for="task-figma">LINK ACUAN FIGMA (OPSIONAL)</label>
-        <input type="url" id="task-figma" placeholder="https://figma.com/design/...">
-      </div>
-      <div class="field">
-        <label for="task-status">STATUS</label>
-        <select id="task-status">
-          <option value="open">Available (Belum Dikerjakan)</option>
-          <option value="doing">In Progress (Sedang Dibuat)</option>
-          <option value="done">Done (Selesai)</option>
-        </select>
-      </div>
-      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
-        <button type="button" class="secondary" id="btn-cancel-task">BATAL</button>
-        <button type="submit" class="primary">SIMPAN JOBDESK ↗</button>
-      </div>
-    </form>
-  </div>
-</div>
+  <audio id="bgm" src="assets/audio/bgm.ogg" loop preload="none"></audio>
 
-<!-- ========================================== -->
-<!-- MODAL 5: REKAP SEMUA PENGUMPULAN           -->
-<!-- ========================================== -->
-<div class="modalback" id="modal-archive-wrap">
-  <div class="modal" style="width:min(760px,100%)">
-    <div class="eyebrow">SUBMISSIONS ARCHIVE / REKAP HASIL</div>
-    <h2>REKAP HASIL<br>PENGUMPULAN TIM.</h2>
-    <div style="font-size:12.5px;color:#444;margin-bottom:14px;background:#fff;border:1.5px solid var(--ink);padding:10px 14px">
-      📁 <b>Lokasi Penyimpanan File Fisik:</b><br>
-      File ZIP dan aset yang diunggah disimpan di folder server: <code style="background:var(--yellow);padding:2px 6px;font-weight:900">uploads/</code> pada project ini. Anda dapat mengunduh atau mengaksesnya langsung di bawah ini.
-    </div>
-
-    <div id="archive-content-container" style="max-height:50vh;overflow-y:auto;border:2px solid var(--ink);background:#fff;padding:12px">
-      <!-- Populated by JS -->
-    </div>
-
-    <div style="display:flex;justify-content:flex-end;margin-top:16px">
-      <button type="button" class="primary" id="btn-close-archive">TUTUP REKAP</button>
-    </div>
-  </div>
-</div>
-
-<!-- ========================================== -->
-<!-- MODAL 6: STATUS SINKRONISASI & SERVER URL   -->
-<!-- ========================================== -->
-<div class="modalback" id="modal-sync-wrap">
-  <div class="modal" style="width:min(640px,100%)">
-    <div class="eyebrow">SERVER &amp; REALTIME SYNC SETTINGS</div>
-    <h2>STATUS SINKRONISASI<br>DATA TIM.</h2>
-
-    <div style="background:#fff;border:2px solid var(--ink);padding:14px;margin-bottom:14px">
-      <div style="font-size:12px;font-weight:900;margin-bottom:6px">STATUS KONEKSI SAAT INI:</div>
-      <div style="display:flex;align-items:center;gap:8px" id="sync-modal-status-box">
-        <span class="sync-dot" id="sync-modal-dot"></span>
-        <span id="sync-modal-status-text" style="font-size:13px;font-weight:800">Mengecek koneksi...</span>
-      </div>
-      <div id="sync-modal-detail" style="font-size:11.5px;color:#555;margin-top:8px;line-height:1.4"></div>
-    </div>
-
-    <div style="background:var(--paper);border:2px solid var(--ink);padding:14px;margin-bottom:14px">
-      <div style="font-size:12px;font-weight:900;margin-bottom:6px">🌐 CARA AGAR SEMUA TEMAN TERSINKRONISASI:</div>
-      <div style="font-size:12px;line-height:1.5;color:#333">
-        <b>1. Jika Satu Jaringan Wi-Fi (Lokal):</b><br>
-        Minta teman membuka alamat IP laptop Reihan: <code style="background:var(--yellow);padding:2px 6px;font-weight:900">http://192.168.100.6:3000</code> di browser HP/laptop mereka.<br><br>
-        <b>2. Jika di Rumah Masing-Masing (Online Cloud):</b><br>
-        Deploy <code>server.js</code> ke cloud gratis (seperti Render.com), lalu masukkan URL backend di bawah ini agar web di GitHub Pages tersambung ke backend yang sama.
-      </div>
-
-      <div style="margin-top:12px">
-        <label for="input-backend-url" style="font-size:11px;font-weight:900;display:block;margin-bottom:4px">CUSTOM BACKEND URL (OPSIONAL):</label>
-        <div style="display:flex;gap:8px">
-          <input type="url" id="input-backend-url" placeholder="https://outbreak-backend.onrender.com" style="flex:1;border:2px solid var(--ink);padding:8px 10px;font-size:12px;font-weight:700">
-          <button type="button" class="primary" id="btn-save-backend-url" style="padding:8px 14px;font-size:11px">SIMPAN</button>
-        </div>
-      </div>
-    </div>
-
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px">
-      <button type="button" class="secondary" id="btn-test-connection" style="font-size:11.5px">
-        <i data-lucide="refresh-cw" style="width:13px;height:13px"></i>
-        <span>UJI KONEKSI SEKARANG</span>
-      </button>
-      <button type="button" class="primary" id="btn-close-sync">TUTUP</button>
-    </div>
-  </div>
-</div>
-
-<!-- ========================================== -->
-<!-- MODAL: DETAIL & PANDUAN LENGKAP JOBDESK    -->
-<!-- ========================================== -->
-<div class="modalback" id="modal-task-detail-wrap" style="z-index:99998">
-  <div class="modal modal-large" style="width:min(740px, 96%);max-height:92vh;display:flex;flex-direction:column;padding:0;overflow:hidden">
-    <!-- Header -->
-    <div style="background:var(--ink);color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid var(--ink);flex-shrink:0">
-      <div style="display:flex;align-items:center;gap:8px">
-        <i data-lucide="book-open" style="width:20px;height:20px;color:var(--yellow)"></i>
-        <div>
-          <div class="eyebrow" style="color:var(--yellow);font-size:10px;margin-bottom:1px">PANDUAN &amp; PENJELASAN RESMI JOBDESK</div>
-          <h2 style="color:#fff;margin:0;font-size:18px;letter-spacing:-0.5px" id="detail-modal-header-id">TASK / #000</h2>
-        </div>
-      </div>
-      <button type="button" id="btn-close-task-detail" style="background:var(--orange);border:2px solid #fff;color:#fff;width:32px;height:32px;font-weight:900;font-size:16px;cursor:pointer;display:grid;place-items:center;box-shadow:2px 2px 0 var(--ink)">
-        <i data-lucide="x" style="width:16px;height:16px"></i>
-      </button>
-    </div>
-
-    <!-- Scrollable Content Body -->
-    <div style="overflow-y:auto;padding:20px;flex:1;background:var(--paper)" id="detail-modal-body">
-      <!-- Populated dynamically by JS -->
-    </div>
-
-    <!-- Modal Footer Actions -->
-    <div style="background:#fff;border-top:2.5px solid var(--ink);padding:12px 18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;flex-shrink:0" id="detail-modal-footer">
-      <!-- Populated dynamically by JS -->
-    </div>
-  </div>
-</div>
-
-<!-- ========================================== -->
-<!-- MODAL: LIGHTBOX / ZOOM GAMBAR PROGRES      -->
-<!-- ========================================== -->
-<div class="modalback" id="modal-lightbox-wrap" style="z-index:99999">
-  <div style="position:relative;max-width:min(920px, 94vw);max-height:92vh;display:flex;flex-direction:column;align-items:center">
-    <button type="button" id="btn-close-lightbox" style="position:absolute;top:-12px;right:-12px;background:var(--orange);color:#fff;border:2.5px solid var(--ink);width:34px;height:34px;font-size:16px;font-weight:900;display:grid;place-items:center;cursor:pointer;box-shadow:3px 3px 0 var(--ink);z-index:10">✕</button>
-    <div style="background:#fff;border:3px solid var(--ink);box-shadow:6px 6px 0 var(--ink);padding:10px;width:100%;text-align:center">
-      <img id="lightbox-img" src="" alt="Preview Progres" style="max-width:100%;max-height:70vh;object-fit:contain;border:2px solid var(--ink);background:#111;display:block;margin:auto">
-      <div style="padding:10px 6px 4px;text-align:left">
-        <div style="font-size:14px;font-weight:900" id="lightbox-title">Judul Progres</div>
-        <div style="font-size:11.5px;color:#555;margin-top:2px" id="lightbox-meta">Oleh Eby • 15 Okt 2026</div>
-        <div style="font-size:12px;margin-top:6px;line-height:1.4" id="lightbox-notes"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- TOAST NOTIFICATION -->
-<div class="toast" id="toast">
-  <i data-lucide="check" style="width:16px;height:16px"></i>
-  <span id="toast-msg">Notifikasi</span>
-</div>
-
-<!-- Google Firebase SDKs (Compat for Storage & Realtime sync) -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-
-<!-- App Scripts -->
-<script src="public/js/api.js"></script>
-<script src="public/js/app.js"></script>
+  <script src="js/main.js?v=1.2.5"></script>
 </body>
 </html>
